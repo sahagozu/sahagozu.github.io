@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Patika – Haritalı Dağ GPS Kaydedici</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{--bg:#eef0e6;--surf:#fbfbf6;--ink:#1d2a22;--mute:#5d6b60;--line:#cfd5c3;--acc:#2f6b4f;--warn:#b5532a}
+@media (prefers-color-scheme:dark){:root{--bg:#141b17;--surf:#1c2520;--ink:#e6ebe0;--mute:#9aa89d;--line:#2c3932;--acc:#6fc29a;--warn:#e08a5e}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;font-size:18px;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+main{max-width:640px;margin:0 auto;padding:12px}
+h1{font-size:28px;margin:4px 0 10px}
+h2{font-size:20px;margin:14px 0 4px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid var(--ink);background:var(--surf)}
+.stats div{padding:8px 10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stats div:nth-child(3n){border-right:0}
+.stats div:nth-last-child(-n+3){border-bottom:0}
+.v{font-size:34px;font-weight:700;line-height:1}
+.u{font-size:14px;color:var(--mute)}
+#map{height:55vh;min-height:320px;margin:10px 0;border:1.5px solid var(--ink)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-weight:700;padding:11px 16px;border:1.5px solid var(--ink);background:var(--surf);color:var(--ink);cursor:pointer;border-radius:3px;flex:1;min-width:110px}
+button.main{background:var(--acc);color:#fff;border-color:var(--acc)}
+button.stop{background:var(--warn);color:#fff;border-color:var(--warn)}
+button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+#msg{color:var(--mute);margin:8px 0;min-height:22px}
+ul{list-style:none;padding:0;margin:8px 0}
+li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+</style>
+</head>
+<body>
+<main>
+<h1>Patika</h1>
+<div class="stats">
+<div><div class="v" id="dist">0.00</div><div class="u">km mesafe</div></div>
+<div><div class="v" id="time">00:00</div><div class="u">süre</div></div>
+<div><div class="v" id="spd">0.0</div><div class="u">km/s hız</div></div>
+<div><div class="v" id="alt">–</div><div class="u">m rakım</div></div>
+<div><div class="v" id="gain">0</div><div class="u">m tırmanış</div></div>
+<div><div class="v" id="hdg">–</div><div class="u">yön</div></div>
+</div>
+<div id="map"></div>
+<div class="row">
+<button class="main" id="go">Kaydı başlat</button>
+<button id="wp">Nokta ekle</button>
+<button id="exp">GPX indir</button>
+</div>
+<div id="msg">Konum izni vermen gerekir. Katmanı haritanın sağ üstünden değiştirebilirsin.</div>
+<h2>Noktalar</h2>
+<ul id="wps"><li><span>Henüz nokta yok</span></li></ul>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"});
+var topo=L.tileLayer("https://tile.opentopomap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:"© OpenTopoMap, © OpenStreetMap"});
+var map=L.map("map",{layers:[topo]}).setView([37.0,35.32],11);
+L.control.layers({"Topo harita":topo,"Sokak haritası":osm}).addTo(map);
+var line=L.polyline([],{color:"#2f6b4f",weight:5}).addTo(map);
+var me=L.circleMarker([0,0],{radius:8,color:"#fff",weight:2,fillColor:"#1d6fd1",fillOpacity:1});
+var pts=[],wps=[],watch=null,t0=0,dist=0,gain=0,tick=null,lastAlt=null,fitted=false;
+function hav(a,b){var R=6371000,r=Math.PI/180,dl=(b.lat-a.lat)*r,dn=(b.lon-a.lon)*r;
+var x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)*Math.sin(dn/2);
+return 2*R*Math.asin(Math.sqrt(x))}
+function bearing(a,b){var r=Math.PI/180,y=Math.sin((b.lon-a.lon)*r)*Math.cos(b.lat*r),
+x=Math.cos(a.lat*r)*Math.sin(b.lat*r)-Math.sin(a.lat*r)*Math.cos(b.lat*r)*Math.cos((b.lon-a.lon)*r);
+return (Math.atan2(y,x)/r+360)%360}
+var dirs=["K","KD","D","GD","G","GB","B","KB"];
+function fmt(s){var m=Math.floor(s/60),h=Math.floor(m/60);m%=60;s=Math.floor(s%60);
+return h?h+":"+(m<10?"0":"")+m:(m<10?"0":"")+m+":"+(s<10?"0":"")+s}
+function onPos(pos){
+var p={lat:pos.coords.latitude,lon:pos.coords.longitude,ele:pos.coords.altitude,t:pos.timestamp};
+var ll=[p.lat,p.lon];
+if(!me._map)me.addTo(map);me.setLatLng(ll);
+if(!fitted){map.setView(ll,16);fitted=true}
+if(pos.coords.accuracy>40){$("msg").textContent="Sinyal zayıf (±"+Math.round(pos.coords.accuracy)+" m), nokta atlandı.";return}
+$("msg").textContent="Kayıt sürüyor · doğruluk ±"+Math.round(pos.coords.accuracy)+" m";
+var l=pts[pts.length-1];
+if(l){var d=hav(l,p);if(d<3)return;dist+=d;$("hdg").textContent=dirs[Math.round(bearing(l,p)/45)%8];
+if(p.ele!=null&&lastAlt!=null&&p.ele-lastAlt>1)gain+=p.ele-lastAlt}
+if(p.ele!=null)lastAlt=p.ele;
+pts.push(p);line.addLatLng(ll);map.panTo(ll);
+$("dist").textContent=(dist/1000).toFixed(2);$("gain").textContent=Math.round(gain);
+$("alt").textContent=p.ele!=null?Math.round(p.ele):"–";
+var sp=pos.coords.speed;$("spd").textContent=sp!=null?(sp*3.6).toFixed(1):"0.0"}
+function err(e){$("msg").textContent=e.code==1?"Konum izni reddedildi. Tarayıcı ayarlarından izin ver.":"Konum alınamadı: "+e.message}
+$("go").onclick=function(){
+var b=this;
+if(watch!==null){navigator.geolocation.clearWatch(watch);clearInterval(tick);watch=null;b.textContent="Kaydı başlat";b.className="main";$("msg").textContent="Kayıt durdu.";return}
+if(!navigator.geolocation){$("msg").textContent="Bu cihaz konumu desteklemiyor.";return}
+pts=[];dist=0;gain=0;lastAlt=null;fitted=false;line.setLatLngs([]);t0=Date.now();
+watch=navigator.geolocation.watchPosition(onPos,err,{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+tick=setInterval(function(){$("time").textContent=fmt((Date.now()-t0)/1000)},1000);
+b.textContent="Kaydı durdur";b.className="stop";$("msg").textContent="Konum bekleniyor…"};
+$("wp").onclick=function(){
+var p=pts[pts.length-1];if(!p){$("msg").textContent="Önce kaydı başlat ve konum al.";return}
+var w={lat:p.lat,lon:p.lon,ele:p.ele,name:"Nokta "+(wps.length+1)};wps.push(w);
+L.marker([w.lat,w.lon]).addTo(map).bindPopup(w.name);
+var ul=$("wps");if(wps.length===1)ul.innerHTML="";
+var li=document.createElement("li");
+li.innerHTML="<span>"+w.name+"</span><span>"+w.lat.toFixed(5)+", "+w.lon.toFixed(5)+"</span>";ul.appendChild(li)};
+$("exp").onclick=function(){
+if(!pts.length){$("msg").textContent="Dışa aktarılacak rota yok.";return}
+var x='<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Patika" xmlns="http://www.topografix.com/GPX/1/1">\n';
+wps.forEach(function(w){x+='<wpt lat="'+w.lat+'" lon="'+w.lon+'"><name>'+w.name+'</name></wpt>\n'});
+x+='<trk><name>Patika kaydı</name><trkseg>\n';
+pts.forEach(function(p){x+='<trkpt lat="'+p.lat+'" lon="'+p.lon+'">'+(p.ele!=null?'<ele>'+p.ele.toFixed(1)+'</ele>':'')+'<time>'+new Date(p.t).toISOString()+'</time></trkpt>\n'});
+x+='</trkseg></trk>\n</gpx>';
+var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([x],{type:"application/gpx+xml"}));
+a.download="patika-"+new Date().toISOString().slice(0,10)+".gpx";a.click();$("msg").textContent="GPX indirildi."};
+})();
+</script>
+</body>
+</html>
