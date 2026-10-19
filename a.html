@@ -28,7 +28,19 @@ body{background:var(--bg);color:var(--ink);font:18px "Barlow Condensed","Arial N
 .bar button.on{color:#3ddc73}
 .bar svg{width:32px;height:32px;stroke:currentColor;fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
 .bar svg.f{fill:currentColor;stroke:none}
-.sh{position:fixed;left:8px;right:8px;bottom:calc(76px + env(safe-area-inset-bottom,0px));max-height:55vh;overflow:auto;background:var(--surf);color:var(--ink);border:1.5px solid var(--ink);border-radius:8px;padding:10px 12px;z-index:1100}
+.sh{position:fixed;left:8px;width:min(420px,calc(100% - 16px));bottom:calc(76px + env(safe-area-inset-bottom,0px));max-height:40vh;overflow:auto;background:var(--surf);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 10px;z-index:1100;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.sh button,.sh select{padding:7px 10px;font-weight:600}
+.sh details{border-top:1px solid var(--line)}
+.sh summary{cursor:pointer;padding:8px 0;font-weight:700;list-style:none;display:flex;justify-content:space-between}
+.sh summary::-webkit-details-marker{display:none}
+.sh summary::after{content:"+"}
+.sh details[open]>summary::after{content:"–"}
+#dr{position:fixed;left:8px;width:min(420px,calc(100% - 16px));bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:1150;background:var(--surf);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+#dr[hidden]{display:none}
+#dr .row{margin:4px 0 0;flex-wrap:nowrap}
+#dr button{padding:7px 6px;min-width:0;font-size:15px}
+.vx{width:16px;height:16px;border-radius:50%;background:#8a4fd1;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+#lkov{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .sh[hidden]{display:none}
 .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .hd button{flex:none;min-width:0;padding:4px 10px}
@@ -67,44 +79,47 @@ canvas{width:100%;height:150px;display:block;border:1px solid var(--line)}
 <div id="msg"></div>
 
 <div class="sh" id="sh1" hidden><div class="hd"><b>Menü</b><button class="cl">✕</button></div>
-<div class="row"><button class="main" id="go">Kaydı başlat</button></div>
-<div class="m">Koordinat sistemi</div>
-<select id="cs"><option value="dd">Ondalık derece (WGS84)</option><option value="dms">Derece-dakika-saniye</option><option value="utm">UTM</option><option value="mgrs" selected>MGRS</option><option value="swiss">İsviçre ızgarası (LV95)</option></select>
-<div class="m" style="margin-top:12px">Rota takibi (GPX, KML, GeoJSON)</div>
-<input type="file" id="fl" accept=".gpx,.kml,.kmz,.json,.geojson"><label><input type="checkbox" id="mg"> Yüklenen rotayı mevcutla birleştir</label><div id="rt" class="m">Rota yüklenmedi. Rotadan 30 m uzaklaşınca sesli uyarı verir.</div>
-<div class="m" style="margin-top:12px">Rota planla: haritaya dokun → "Rotaya ekle"</div>
-<div class="row"><button id="r1">Geri al</button><button id="r2">Temizle</button><button id="r3">Planı takip et</button><button id="r4">Rotayı ters çevir</button><button id="r5">İzi rotaya al (dönüş)</button></div>
-<div class="m" style="margin-top:12px">Grafik</div>
+<div class="row"><button class="main" id="go">Kaydı başlat</button><select id="cs"><option value="dd">Ondalık derece</option><option value="dms">Derece-dk-sn</option><option value="utm">UTM</option><option value="mgrs" selected>MGRS</option><option value="swiss">İsviçre (LV95)</option></select></div>
+<details><summary>Rota</summary>
+<div class="row"><button id="r0">Rota çiz</button><button id="r9">Yüklüyü düzenle</button><button id="r8">Ters çevir</button><button id="r5">İzi rotaya al</button></div>
+<input type="file" id="fl" accept=".gpx,.kml,.kmz,.json,.geojson"><label><input type="checkbox" id="mg"> Yüklenen rotayı mevcutla birleştir</label>
+<div id="rt" class="m">Rota yüklenmedi. Rotadan 30 m uzaklaşınca sesli uyarı verir.</div></details>
+<details><summary>İstatistik ve grafik</summary>
 <select id="gm"><option value="ed">Yükseklik / mesafe (eğim renkli)</option><option value="et">Yükseklik / zaman</option><option value="sd">Hız / mesafe</option></select>
 <canvas id="pf" width="640" height="150"></canvas><div id="pm" class="m"></div><div id="sx" class="m"></div>
-<div class="m">Kilometre turları</div><ul id="laps"></ul>
-<div class="m" style="margin-top:12px">GPS ayarları</div>
+<div class="m">Kilometre turları</div><ul id="laps"></ul></details>
+<details><summary>GPS ayarları</summary>
 <label>Doğruluk eşiği <select id="fa"><option value="10">±10 m</option><option value="20">±20 m</option><option value="40" selected>±40 m</option><option value="100">±100 m</option></select></label>
-<label><input type="checkbox" id="fj" checked> Sıçrama filtresi (90 km/s üstü atlanır)</label>
-<label><input type="checkbox" id="bt"> Pil tasarrufu (düşük hassasiyetli GPS)</label>
-<label>Rakım düzeltmesi (m) <input type="number" id="ao" value="0" style="width:90px"></label>
-<div class="m" style="margin-top:12px">Ekranda göster</div>
-<label><input type="checkbox" data-h="hb1" checked> Koordinat</label><label><input type="checkbox" data-h="hb2" checked> Ölçek</label><label><input type="checkbox" data-h="hb3" checked> GPS ve istatistik</label><label><input type="checkbox" data-h="hb4" checked> Yön</label></div>
+<label><input type="checkbox" id="fj" checked> Sıçrama filtresi</label>
+<label><input type="checkbox" id="bt"> Pil tasarrufu</label>
+<label>Rakım düzeltmesi (m) <input type="number" id="ao" value="0" style="width:90px"></label></details>
+<details><summary>Ekranda göster</summary>
+<label><input type="checkbox" data-h="hb1" checked> Koordinat</label><label><input type="checkbox" data-h="hb2" checked> Ölçek</label><label><input type="checkbox" data-h="hb3" checked> GPS ve istatistik</label><label><input type="checkbox" data-h="hb4" checked> Yön</label></details></div>
 
 <div class="sh" id="sh2" hidden><div class="hd"><b>Haritalar</b><button class="cl">✕</button></div>
 <select id="bm"><option value="topo">Topo harita</option><option value="osm">Sokak haritası</option><option value="sat">Uydu</option></select>
-<label>Yürüyüş yolları kaplaması <input type="checkbox" id="ovOn"></label>
-<label>Kaplama saydamlığı <input type="range" id="ovOp" min="0.1" max="1" step="0.05" value="0.8"></label>
+<details><summary>Katmanlar</summary>
+<label>Yürüyüş yolları <input type="checkbox" id="ovOn"></label>
+<label>Saydamlık <input type="range" id="ovOp" min="0.1" max="1" step="0.05" value="0.8"></label>
+<label>Gölgeli kabartma <input type="checkbox" id="hsOn"></label>
+<label>Saydamlık <input type="range" id="hsOp" min="0.1" max="1" step="0.05" value="0.6"></label>
 <label>Parlaklık <input type="range" id="fb" min="0.5" max="1.5" step="0.05" value="1"></label>
 <label>Kontrast <input type="range" id="fc" min="0.5" max="1.5" step="0.05" value="1"></label>
-<label>Doygunluk <input type="range" id="fs" min="0" max="2" step="0.05" value="1"></label>
-<label>Gölgeli kabartma <input type="checkbox" id="hsOn"></label>
-<label>Kabartma saydamlığı <input type="range" id="hsOp" min="0.1" max="1" step="0.05" value="0.6"></label>
-<div class="m" style="margin-top:8px">MBTiles dosyası (SQLite harita)</div><input type="file" id="mb" accept=".mbtiles">
-<div class="m" style="margin-top:8px">Resim haritası (PNG/JPG): köşeleri sürükleyerek konumlandır</div><input type="file" id="im" accept="image/*">
-<label>Resim saydamlığı <input type="range" id="imOp" min="0.1" max="1" step="0.05" value="0.7"></label>
-<div class="m" style="margin-top:8px">Çevrimdışı harita (seçili harita, görünen alan)</div>
-<div class="row"><select id="dz"><option value="1">+1 yakınlık</option><option value="2" selected>+2 yakınlık</option><option value="3">+3 yakınlık</option><option value="4">+4 yakınlık</option></select><button id="dl">Alanı indir</button><button id="clr">Önbelleği sil</button></div>
-<div id="dm" class="m"></div><div id="cn" class="m"></div></div>
+<label>Doygunluk <input type="range" id="fs" min="0" max="2" step="0.05" value="1"></label></details>
+<details><summary>Harita dosyaları</summary>
+<div class="m">MBTiles</div><input type="file" id="mb" accept=".mbtiles">
+<div class="m" style="margin-top:8px">Resim haritası (köşeleri sürükleyip konumla)</div><input type="file" id="im" accept="image/*">
+<label>Resim saydamlığı <input type="range" id="imOp" min="0.1" max="1" step="0.05" value="0.7"></label></details>
+<details><summary>Çevrimdışı</summary>
+<div class="row"><select id="dz"><option value="1">+1</option><option value="2" selected>+2</option><option value="3">+3</option><option value="4">+4</option></select><button id="dl">Alanı indir</button><button id="clr">Sil</button></div>
+<div id="dm" class="m"></div><div id="cn" class="m"></div></details></div>
 
 <div class="sh" id="sh3" hidden><div class="hd"><b>Pinler</b><button class="cl">✕</button></div>
 <div class="row"><button class="main" id="wp">Pin ekle</button></div><ul id="wps"></ul>
-<div class="row"><button data-x="gpx">GPX</button><button data-x="kml">KML</button><button data-x="kmz">KMZ</button><button data-x="csv">CSV</button><button data-x="json">GeoJSON</button></div></div>
+<details><summary>Dışa aktar</summary><div class="row"><button data-x="gpx">GPX</button><button data-x="kml">KML</button><button data-x="kmz">KMZ</button><button data-x="csv">CSV</button><button data-x="json">GeoJSON</button></div></details></div>
+
+<div id="dr" hidden><div id="dn" class="m"></div>
+<div class="row"><button id="r1">↶ Geri al</button><button id="r2">Temizle</button><button id="r4">↔ Ters</button><button id="r6">GPX</button><button class="main" id="r3">Takip et</button><button id="r7">✕</button></div></div>
 
 <div class="bar">
 <button data-p="sh1" aria-label="Menü"><svg class="f" viewBox="0 0 24 24"><path d="M1 20l7-13 4 7 3-5 8 11z"/></svg></button>
@@ -114,7 +129,7 @@ canvas{width:100%;height:150px;display:block;border:1px solid var(--line)}
 <button id="cp" aria-label="Pusula"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M16 8l-2.2 5.8L8 16l2.2-5.8z"/></svg></button>
 <button id="tl" aria-label="Ekran kilidi"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></button>
 </div>
-<div id="lkov" hidden><button id="ul">Kilidi açmak için basılı tut</button></div>
+<div id="lkov" hidden><button id="ul">Kilidi aç: 3 kez dokun ya da basılı tut</button></div>
 
 <div id="pd" hidden><div class="box"><b id="pttl">Yeni pin</b>
 <div class="m" style="margin-top:10px">İsim</div><input type="text" id="pn" placeholder="Örn. Su kaynağı">
@@ -173,14 +188,14 @@ if(m==="utm")return u.z+u.b+" "+Math.round(u.e)+" E "+Math.round(u.n)+" N";
 var cl=["ABCDEFGH","JKLMNPQR","STUVWXYZ"][(u.z-1)%3],rl="ABCDEFGHJKLMNPQRSTUV",off=u.z%2===0?5:0;
 return u.z+u.b+" "+cl.charAt(Math.floor(u.e/1e5)-1)+rl.charAt((Math.floor(u.n/1e5)+off)%20)+" "+p5(u.e%1e5)+" "+p5(u.n%1e5)}
 return lat.toFixed(5)+", "+lon.toFixed(5)}
-map.on("click",function(e){var ll=e.latlng,d=document.createElement("div"),t=document.createElement("div"),P={lat:ll.lat,lon:ll.lng};
+map.on("click",function(e){if(drw){plan.push([e.latlng.lat,e.latlng.lng]);pu();return}var ll=e.latlng,d=document.createElement("div"),t=document.createElement("div"),P={lat:ll.lat,lon:ll.lng};
 function B(x,f){var b=document.createElement("button");b.textContent=x;b.onclick=f;d.appendChild(b)}
 t.textContent=fc(ll.lat,ll.lng);if(mA){var a={lat:mA.lat,lon:mA.lng};t.textContent+="\nA'dan: "+(hav(a,P)/1000).toFixed(3)+" km, "+brg(a,P).toFixed(1)+"°"}
 t.style.whiteSpace="pre";d.appendChild(t);
 B("Pin ekle",function(){openPin({lat:ll.lat,lon:ll.lng,name:"Pin "+(wps.length+1)})});
 B("Hedef yap",function(){tgt=P;updT();map.closePopup()});
 B("Ölçüm A",function(){mA=ll;mm.setLatLng(ll).addTo(map);map.closePopup()});
-B("Rotaya ekle",function(){plan.push([ll.lat,ll.lng]);pl.setLatLngs(plan);map.closePopup()});
+B("Rotaya ekle",function(){plan.push([ll.lat,ll.lng]);pu();map.closePopup()});
 L.popup().setLatLng(ll).setContent(d).openOn(map)});
 /* state */
 var pts=[],wps=[],route=[],watch=null,t0=0,dist=0,gain=0,tick=null,lastAlt=null,fitted=false,lock=null,lastBeep=0,ac,cEl=false,lastFix=null,cpOn=false,cpF=null,rec=false,follow=true,tgt=null,loss=0,lt=0,mov=0,stp=0,mxs=0,laps=[],mag=0,spNow=0,mA=null,plan=[];
@@ -311,14 +326,28 @@ var mm=L.circleMarker([0,0],{radius:7,color:"#8a4fd1",fillOpacity:.8}),pl=L.poly
 $("gm").onchange=profile;
 $("bt").onchange=function(){if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;startGps()}};
 document.querySelectorAll("[data-h]").forEach(function(c){c.onchange=function(){$(c.dataset.h).style.display=c.checked?"":"none"}});
-$("r1").onclick=function(){plan.pop();pl.setLatLngs(plan)};
-$("r2").onclick=function(){plan=[];pl.setLatLngs(plan)};
-$("r3").onclick=function(){if(plan.length<2){$("rt").textContent="Önce haritadan en az 2 nokta ekle.";return}route=plan.slice();rl.setLatLngs(route);$("rt").textContent="Plan rota yapıldı ("+route.length+" nokta). Sapınca uyarı verir."};
-$("r4").onclick=function(){if(route.length){route.reverse();rl.setLatLngs(route)}else{plan.reverse();pl.setLatLngs(plan)}$("rt").textContent="Rota ters çevrildi."};
-$("r5").onclick=function(){if(pts.length<2){$("rt").textContent="Önce bir iz kaydet.";return}route=pts.map(function(p){return[p.lat,p.lon]}).reverse();rl.setLatLngs(route);$("rt").textContent="Kaydedilen iz ters çevrilip rota yapıldı: geri dönüşte takip edilir."};
+var drw=false,vm=L.layerGroup().addTo(map);
+function plen(){var t=0;for(var i=1;i<plan.length;i++)t+=hav({lat:plan[i-1][0],lon:plan[i-1][1]},{lat:plan[i][0],lon:plan[i][1]});return t}
+function pu(){pl.setLatLngs(plan);vm.clearLayers();var n=plen();$("dn").textContent=plan.length+" nokta · "+(n/1000).toFixed(2)+" km · yürüyüş ~"+Math.round(n/1.11/60)+" dk";
+if(drw)plan.forEach(function(q,i){var k=L.marker(q,{draggable:true,icon:L.divIcon({className:"pinw",iconSize:[16,16],iconAnchor:[8,8],html:'<div class="vx"></div>'})}).addTo(vm);k.on("drag",function(e){plan[i]=[e.latlng.lat,e.latlng.lng];pl.setLatLngs(plan)});k.on("dragend",pu)})}
+function setDraw(on){drw=on;$("dr").hidden=!on;map.getContainer().style.cursor=on?"crosshair":"";if(on){closeAll();$("msg").textContent="Haritaya dokunarak nokta ekle, noktaları sürükleyerek düzelt."}pu()}
+$("r0").onclick=function(){setDraw(true)};
+$("r7").onclick=function(){setDraw(false)};
+$("r1").onclick=function(){plan.pop();pu()};
+$("r2").onclick=function(){plan=[];pu()};
+$("r4").onclick=function(){plan.reverse();pu()};
+$("r3").onclick=function(){if(plan.length<2){$("msg").textContent="En az 2 nokta ekle.";return}route=plan.slice();rl.setLatLngs(route);setDraw(false);$("rt").textContent="Plan rota yapıldı ("+route.length+" nokta). Sapınca uyarı verir.";$("msg").textContent="Rota takibi açık."};
+$("r6").onclick=function(){if(plan.length<2){$("msg").textContent="En az 2 nokta ekle.";return}var x='<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Patika" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>Planlanan rota</name><trkseg>\n'+plan.map(function(q){return'<trkpt lat="'+q[0]+'" lon="'+q[1]+'"/>'}).join("\n")+'\n</trkseg></trk></gpx>';dlf("rota-"+new Date().toISOString().slice(0,10)+".gpx",x,"application/gpx+xml")};
+$("r8").onclick=function(){if(!route.length){$("rt").textContent="Yüklü rota yok.";return}route.reverse();rl.setLatLngs(route);$("rt").textContent="Rota ters çevrildi."};
+$("r9").onclick=function(){if(!route.length){$("rt").textContent="Yüklü rota yok.";return}plan=route.slice();setDraw(true);map.fitBounds(rl.getBounds())};
+$("r5").onclick=function(){if(pts.length<2){$("rt").textContent="Önce bir iz kaydet.";return}route=pts.map(function(p){return[p.lat,p.lon]}).reverse();rl.setLatLngs(route);$("rt").textContent="Kaydedilen iz ters çevrilip rota yapıldı: dönüşte takip edilir."};
+document.querySelectorAll(".sh details").forEach(function(d){d.addEventListener("toggle",function(){if(d.open)d.parentNode.querySelectorAll("details").forEach(function(o){if(o!==d)o.open=false})})});
 $("tl").onclick=function(){closeAll();$("lkov").hidden=false};
-$("ul").onpointerdown=function(){lt3=setTimeout(function(){$("lkov").hidden=true},1500)};
-["pointerup","pointerleave","pointercancel"].forEach(function(n){$("ul").addEventListener(n,function(){clearTimeout(lt3)})});
+var taps=[];
+function unlock(){clearTimeout(lt3);taps=[];$("lkov").hidden=true}
+$("ul").addEventListener("contextmenu",function(e){e.preventDefault()});
+$("ul").onpointerdown=function(e){e.preventDefault();try{$("ul").setPointerCapture(e.pointerId)}catch(x){}var n=Date.now();taps=taps.filter(function(t){return n-t<1500});taps.push(n);if(taps.length>=3){unlock();return}clearTimeout(lt3);lt3=setTimeout(unlock,1200)};
+["pointerup","pointercancel"].forEach(function(n){$("ul").addEventListener(n,function(){clearTimeout(lt3)})});
 $("pph").onchange=function(){var f=this.files[0];if(!f)return;var im=new Image(),u=URL.createObjectURL(f);im.onload=function(){var k=Math.min(1,480/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);ph=c.toDataURL("image/jpeg",.6);$("pam").textContent="Fotoğraf eklendi.";URL.revokeObjectURL(u)};im.src=u};
 $("pau").onclick=async function(){var b=this;if(rcr){rcr.stop();return}
 try{var st=await navigator.mediaDevices.getUserMedia({audio:true}),ch=[];rcr=new MediaRecorder(st);rcr.ondataavailable=function(e){ch.push(e.data)};
@@ -347,6 +376,17 @@ try{r=db.exec("select value from metadata where name='bounds'");if(r[0]){var v=r
 /* restore */
 try{var s=JSON.parse(localStorage.getItem("patika")||"null");if(s){pts=s.pts||[];wps=s.wps||[];dist=s.dist||0;gain=s.gain||0;loss=s.loss||0;mov=s.mov||0;stp=s.stp||0;mxs=s.mxs||0;line.setLatLngs(pts.map(function(p){return[p.lat,p.lon]}));if(pts.length)map.fitBounds(line.getBounds())}}catch(e){}
 renderWps();stats();
+/* settings */
+var SID=["cs","bm","ovOn","ovOp","hsOn","hsOp","fb","fc","fs","imOp","dz","fa","fj","bt","ao","gm","mg"];
+function sAll(){var o={};SID.forEach(function(i){var e=$(i);o[i]=e.type==="checkbox"?e.checked:e.value});document.querySelectorAll("[data-h]").forEach(function(c){o[c.dataset.h]=c.checked});return o}
+function saveAll(){try{var c=map.getCenter();localStorage.setItem("patika-s",JSON.stringify({set:sAll(),v:[c.lat,c.lng,map.getZoom()],route:route,plan:plan,tgt:tgt}))}catch(e){}}
+try{var S=JSON.parse(localStorage.getItem("patika-s")||"null");if(S){
+Object.keys(S.set||{}).forEach(function(k){var e=document.querySelector('[data-h="'+k+'"]')||$(k);if(!e)return;if(e.type==="checkbox")e.checked=!!S.set[k];else e.value=S.set[k];["input","change"].forEach(function(n){e.dispatchEvent(new Event(n))})});
+if(S.v)map.setView([S.v[0],S.v[1]],S.v[2]);
+route=S.route||[];rl.setLatLngs(route);plan=S.plan||[];pu();tgt=S.tgt||null;
+if(route.length)$("rt").textContent="Kayıtlı rota yüklendi ("+route.length+" nokta)."}}catch(e){}
+setInterval(saveAll,2000);document.addEventListener("visibilitychange",saveAll);window.addEventListener("pagehide",saveAll);
+document.addEventListener("change",saveAll);document.addEventListener("input",saveAll);
 })();
 </script>
 </body>
