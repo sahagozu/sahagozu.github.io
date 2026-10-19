@@ -201,7 +201,7 @@ function closeAll(){shs.forEach(function(x){x.hidden=true});bts.forEach(function
 bts.forEach(function(b){b.onclick=function(){var x=$(b.dataset.p),was=!x.hidden;closeAll();if(!was){x.hidden=false;b.classList.add("on")}}});
 document.querySelectorAll(".cl").forEach(function(b){b.onclick=closeAll});
 L.control.zoom({position:"bottomright",zoomInText:"+",zoomOutText:"−"}).addTo(map);map.attributionControl.setPosition("bottomleft");
-$("sc").appendChild(L.control.scale({imperial:false}).onAdd(map));
+var scl=L.control.scale({imperial:false}).addTo(map);$("sc").appendChild(scl.getContainer());
 function zi(){var z=map.getZoom(),r=156543.03*Math.cos(map.getCenter().lat*D)/Math.pow(2,z)/0.000264583;$("zm").textContent="1:"+Math.round(r).toLocaleString("tr-TR")+"   "+z+"/"+cur.options.maxZoom}
 map.on("zoomend moveend",zi);zi();
 $("bm").onchange=function(){var n={topo:topo,osm:osm,sat:sat}[this.value];map.removeLayer(cur);cur=n;n.addTo(map);zi()};
