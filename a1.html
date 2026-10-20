@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gelişmiş Saha & Saha Gözü Harita Uygulaması</title>
+
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Chart.js (Yükseklik & Hız Profili İçin) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- QRCode.js (QR Kod Paylaşımı İçin) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <!-- FontAwesome (İkonlar İçin) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #2c3e50;
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --accent-color: #27ae60;
+            --border-color: #ddd;
+        }
+
+        body.dark-mode {
+            --bg-color: #1a1a1a;
+            --text-color: #f1f1f1;
+            --panel-bg: rgba(30, 30, 30, 0.95);
+            --accent-color: #e74c3c;
+            --border-color: #444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { width: 100%; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; background: var(--bg-color); color: var(--text-color); }
+
+        #map { width: 100%; height: 100vh; z-index: 1; }
+
+        /* HUD & Kontrol Paneli */
+        .hud-panel {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: 320px;
+            max-height: 90vh;
+            overflow-y: auto;
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--border-color);
+        }
+
+        .hud-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .hud-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .stat-card { background: rgba(0,0,0,0.04); padding: 8px; border-radius: 8px; text-align: center; }
+        body.dark-mode .stat-card { background: rgba(255,255,255,0.05); }
+        .stat-val { font-size: 1.1rem; font-weight: bold; color: var(--accent-color); }
+        .stat-lbl { font-size: 0.75rem; opacity: 0.8; }
+
+        .btn-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .btn {
+            flex: 1;
+            min-width: 45%;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            background: var(--accent-color);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn-secondary { background: #7f8c8d; }
+        .btn-danger { background: #e74c3c; }
+
+        /* Turn-by-Turn Navigasyon Banner */
+        .nav-banner {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: var(--panel-bg);
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: 2px solid var(--accent-color);
+        }
+
+        /* Grafik & Alt Panel */
+        .chart-panel {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            left: 350px;
+            height: 180px;
+            z-index: 1000;
+            background: var(--panel-bg);
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 1px solid var(--border-color);
+        }
+
+        /* QR Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: var(--bg-color);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        @media (max-width: 768px) {
+            .hud-panel { width: calc(100% - 30px); }
+            .chart-panel { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Harita Konteyneri -->
+    <div id="map"></div>
+
+    <!-- Navigasyon Banner -->
+    <div class="nav-banner" id="navBanner">
+        <i class="fa-solid fa-compass fa-spin" id="navIcon"></i>
+        <span id="navText">GPS Bekleniyor...</span>
+    </div>
+
+    <!-- HUD Kontrol Paneli -->
+    <div class="hud-panel">
+        <div class="hud-title">
+            <span>Saha Gözü v2.5</span>
+            <i class="fa-solid fa-moon" id="themeToggle" style="cursor:pointer;" title="Tema Değiştir"></i>
+        </div>
+
+        <div class="hud-stats">
+            <div class="stat-card">
+                <div class="stat-val" id="valSpeed">0.0</div>
+                <div class="stat-lbl">Hız (km/s)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="valDist">0.00</div>
+                <div class="stat-lbl">Mesafe (km)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="valCal">0</div>
+                <div class="stat-lbl">Kalori (kcal)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="valEle">0</div>
+                <div class="stat-lbl">Yükseklik (m)</div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn" id="btnTrack"><i class="fa-solid fa-play"></i> Takip Başlat</button>
+            <button class="btn btn-secondary" id="btnVoice"><i class="fa-solid fa-volume-high"></i> Sesli Oku</button>
+            <button class="btn btn-secondary" id="btnPin"><i class="fa-solid fa-location-dot"></i> Pin Ekle</button>
+            <button class="btn btn-secondary" id="btnExport"><i class="fa-solid fa-file-export"></i> GPX İndir</button>
+            <button class="btn btn-secondary" id="btnQR"><i class="fa-solid fa-qrcode"></i> QR Paylaş</button>
+            <button class="btn btn-danger" id="btnClear"><i class="fa-solid fa-trash"></i> Temizle</button>
+        </div>
+
+        <div style="font-size:0.8rem; margin-top:8px;">
+            <label><input type="checkbox" id="chkAutoNight"> Otomatik Gece Modu</label><br>
+            <label><input type="checkbox" id="chkLiveShare"> Canlı Konum Yayınla (WebSocket)</label>
+        </div>
+    </div>
+
+    <!-- Grafik Paneli -->
+    <div class="chart-panel">
+        <canvas id="telemetryChart"></canvas>
+    </div>
+
+    <!-- QR Kod Modal -->
+    <div class="modal" id="qrModal">
+        <div class="modal-content">
+            <h3>Konum QR Kodu</h3>
+            <div id="qrcode" style="margin: 15px auto; width:128px;"></div>
+            <button class="btn btn-secondary" onclick="document.getElementById('qrModal').style.display='none'">Kapat</button>
+        </div>
+    </div>
+
+    <script>
+        /* ===================================================
+           1. INDEXEDDB VERİ TABANI YÖNETİMİ
+           =================================================== */
+        class MapDB {
+            constructor() {
+                this.dbName = "SahaGozuDB";
+                this.db = null;
+            }
+            async init() {
+                return new Promise((resolve) => {
+                    const req = indexedDB.open(this.dbName, 1);
+                    req.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains("tracks")) db.createObjectStore("tracks", { keyPath: "id", autoIncrement: true });
+                        if (!db.objectStoreNames.contains("pins")) db.createObjectStore("pins", { keyPath: "id", autoIncrement: true });
+                    };
+                    req.onsuccess = (e) => { this.db = e.target.result; resolve(); };
+                });
+            }
+            async savePin(pin) {
+                const tx = this.db.transaction("pins", "readwrite");
+                tx.objectStore("pins").add(pin);
+            }
+        }
+        const db = new MapDB();
+        db.init();
+
+        /* ===================================================
+           2. HARİTA & TEMEL DEĞİŞKENLER
+           =================================================== */
+        const map = L.map('map').setView([38.24, 36.91], 13); // Afşin varsayılan
+        
+        // Katmanlar
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: 'OSM' }).addTo(map);
+        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: 'OTM' });
+
+        L.control.layers({ "Sokak Haritası": osmLayer, "Topografik": topoLayer }).addTo(map);
+
+        let isTracking = false;
+        let watchId = null;
+        let pathCoords = [];
+        let totalDistance = 0; // km
+        let userWeight = 75; // kg (Kalori hesabı için)
+        let trackPolyline = L.polyline([], { color: '#27ae60', weight: 5 }).addTo(map);
+        let userMarker = null;
+
+        /* ===================================================
+           3. SESLİ ASİSTAN (SPEECH SYNTHESIS)
+           =================================================== */
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'tr-TR';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        /* ===================================================
+           4. TELEMETRİ GRAFİĞİ (CHART.JS)
+           =================================================== */
+        const ctx = document.getElementById('telemetryChart').getContext('2d');
+        const telemetryChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'Hız (km/s)', data: [], borderColor: '#27ae60', yAxisID: 'y' },
+                    { label: 'Yükseklik (m)', data: [], borderColor: '#2980b9', yAxisID: 'y1' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { type: 'linear', position: 'left' },
+                    y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } }
+                }
+            }
+        });
+
+        /* ===================================================
+           5. GPS TAKİP & NAVİGASYON MANTIĞI
+           =================================================== */
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function updatePosition(pos) {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const speed = (pos.coords.speed || 0) * 3.6; // m/s -> km/s
+            const ele = pos.coords.altitude || 0;
+            const latlng = [lat, lng];
+
+            // İlk Pozisyon
+            if (!userMarker) {
+                userMarker = L.marker(latlng).addTo(map).bindPopup("Mevcut Konum");
+                map.setView(latlng, 16);
+            } else {
+                userMarker.setLatLng(latlng);
+            }
+
+            if (isTracking) {
+                if (pathCoords.length > 0) {
+                    const lastPt = pathCoords[pathCoords.length - 1];
+                    const distDelta = calculateDistance(lastPt[0], lastPt[1], lat, lng);
+                    
+                    if (distDelta > 0.005) { // En az 5 metre hareket
+                        totalDistance += distDelta;
+                        
+                        // Splits / Tur Zamanları Sesli Bildirim (Her 1 km)
+                        if (Math.floor(totalDistance) > Math.floor(totalDistance - distDelta)) {
+                            speak(`Tebrikler. ${Math.floor(totalDistance)} kilometreyi tamamladınız.`);
+                        }
+                    }
+                }
+
+                pathCoords.push([lat, lng]);
+                trackPolyline.setLatLngs(pathCoords);
+
+                // Kalori Hesabı (MET Değeri ~3.8 yürüyüş)
+                const calories = Math.round(totalDistance * userWeight * 1.036);
+
+                // Arayüz Güncelleme
+                document.getElementById('valSpeed').innerText = speed.toFixed(1);
+                document.getElementById('valDist').innerText = totalDistance.toFixed(2);
+                document.getElementById('valCal').innerText = calories;
+                document.getElementById('valEle').innerText = Math.round(ele);
+
+                document.getElementById('navText').innerText = `Takip Ediliyor: ${speed.toFixed(1)} km/s`;
+
+                // Grafik Güncelleme
+                const timeStr = new Date().toLocaleTimeString().substring(0, 5);
+                telemetryChart.data.labels.push(timeStr);
+                telemetryChart.data.datasets[0].data.push(speed.toFixed(1));
+                telemetryChart.data.datasets[1].data.push(Math.round(ele));
+                if (telemetryChart.data.labels.length > 20) {
+                    telemetryChart.data.labels.shift();
+                    telemetryChart.data.datasets[0].data.shift();
+                    telemetryChart.data.datasets[1].data.shift();
+                }
+                telemetryChart.update();
+            }
+        }
+
+        // GPS Takip Butonu
+        document.getElementById('btnTrack').addEventListener('click', () => {
+            isTracking = !isTracking;
+            const btn = document.getElementById('btnTrack');
+            if (isTracking) {
+                btn.innerHTML = `<i class="fa-solid fa-stop"></i> Durdur`;
+                btn.classList.replace('btn', 'btn-danger');
+                speak("GPS rota takibi başlatıldı.");
+                
+                if (navigator.geolocation) {
+                    watchId = navigator.geolocation.watchPosition(updatePosition, (err) => console.error(err), {
+                        enableHighAccuracy: true,
+                        maximumAge: 1000
+                    });
+                }
+            } else {
+                btn.innerHTML = `<i class="fa-solid fa-play"></i> Takip Başlat`;
+                btn.classList.replace('btn-danger', 'btn');
+                speak("Takip durduruldu.");
+                if (watchId) navigator.geolocation.clearWatch(watchId);
+            }
+        });
+
+        /* ===================================================
+           6. GECE / GÜNDÜZ MODU & OTOMASYON
+           =================================================== */
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+
+        // Gün Doğumu/Batımı Mantığına Göre Otomatik Gece Modu
+        setInterval(() => {
+            if (document.getElementById('chkAutoNight').checked) {
+                const hour = new Date().getHours();
+                if (hour >= 19 || hour < 6) {
+                    document.body.classList.add('dark-mode');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                }
+            }
+        }, 60000);
+
+        /* ===================================================
+           7. GPX DIŞA AKTARMA (EXPORTER)
+           =================================================== */
+        document.getElementById('btnExport').addEventListener('click', () => {
+            if (pathCoords.length === 0) {
+                alert("İndirilecek rota verisi bulunamadı!");
+                return;
+            }
+
+            let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="SahaGozu">\n<trk><name>Saha Rota Kaydı</name><trkseg>\n`;
+            pathCoords.forEach(pt => {
+                gpx += `<trkpt lat="${pt[0]}" lon="${pt[1]}"></trkpt>\n`;
+            });
+            gpx += `</trkseg></trk>\n</gpx>`;
+
+            const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rota_${Date.now()}.gpx`;
+            a.click();
+            speak("GPX dosyası dışa aktarıldı.");
+        });
+
+        /* ===================================================
+           8. QR KOD OLUŞTURUCU & PAYLAŞIM
+           =================================================== */
+        document.getElementById('btnQR').addEventListener('click', () => {
+            if (!userMarker) {
+                alert("Henüz bir konum alınamadı!");
+                return;
+            }
+            const latLng = userMarker.getLatLng();
+            const geoUrl = `https://www.google.com/maps?q=${latLng.lat},${latLng.lng}`;
+
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), {
+                text: geoUrl,
+                width: 128,
+                height: 128
+            });
+
+            document.getElementById('qrModal').style.display = 'flex';
+        });
+
+        /* ===================================================
+           9. ÖZEL PİN & KATEGORİ EKLEME
+           =================================================== */
+        document.getElementById('btnPin').addEventListener('click', () => {
+            map.once('click', (e) => {
+                const cat = prompt("Pin Kategorisi girin (ör: Su, Kamp, Tehlike):", "Kamp");
+                if (cat) {
+                    const marker = L.marker(e.latlng).addTo(map)
+                        .bindPopup(`<b>Kategori: ${cat}</b><br>Lat: ${e.latlng.lat.toFixed(4)}<br>Lng: ${e.latlng.lng.toFixed(4)}`)
+                        .openPopup();
+                    
+                    db.savePin({ cat, lat: e.latlng.lat, lng: e.latlng.lng, timestamp: Date.now() });
+                }
+            });
+            speak("Haritada pin eklemek istediğiniz noktaya tıklayın.");
+        });
+
+        /* ===================================================
+           10. SESLİ DURUM OKUMA (SESLİ ASİSTAN)
+           =================================================== */
+        document.getElementById('btnVoice').addEventListener('click', () => {
+            const speed = document.getElementById('valSpeed').innerText;
+            const dist = document.getElementById('valDist').innerText;
+            const cal = document.getElementById('valCal').innerText;
+            speak(`Mevcut hızınız saatte ${speed} kilometre. Kat edilen toplam mesafe ${dist} kilometre. Yakılan kalori ${cal} kilokalori.`);
+        });
+
+        // Temizle Butonu
+        document.getElementById('btnClear').addEventListener('click', () => {
+            if (confirm("Tüm rota ve veriler temizlensin mi?")) {
+                pathCoords = [];
+                totalDistance = 0;
+                trackPolyline.setLatLngs([]);
+                document.getElementById('valSpeed').innerText = "0.0";
+                document.getElementById('valDist').innerText = "0.00";
+                document.getElementById('valCal').innerText = "0";
+                document.getElementById('valEle').innerText = "0";
+                telemetryChart.data.labels = [];
+                telemetryChart.data.datasets[0].data = [];
+                telemetryChart.data.datasets[1].data = [];
+                telemetryChart.update();
+                speak("Veriler temizlendi.");
+            }
+        });
+    </script>
+</body>
+</html>
