@@ -789,6 +789,14 @@ canvas{width:100%;height:150px;display:block;border:1px solid var(--line)}
 .leaflet-control-layers{border-radius:14px}
 .leaflet-control-layers-expanded{color:var(--ink);padding:8px 10px}
 @supports not (backdrop-filter:blur(1px)){.sh,#dr,#shb,.hb{background:var(--surf)}.bar{background:rgba(24,28,26,.92)}}
+#nrt{font-size:10px;opacity:.85;line-height:1.1;white-space:nowrap}
+.glove .bar button{padding:18px 0}
+.glove .bar svg{width:38px;height:38px}
+.glove .sh,.glove #dr,.glove #shb{font-size:19px}
+.glove .sh button,.glove .sh select,.glove #dr button,.glove #shb button,.glove .leaflet-popup-content button{min-height:52px;font-size:19px;padding:10px 14px}
+.glove input[type=checkbox]{width:28px;height:28px}
+.glove .vx{transform:scale(1.6)}.glove .vx.tg{transform:scale(2)}.glove .mx{transform:scale(1.6)}.glove .mk{transform:scale(1.3)}
+.glove .leaflet-bar a{width:44px;height:44px;line-height:44px;font-size:24px}
 </style>
 </head>
 <body>
@@ -800,7 +808,7 @@ canvas{width:100%;height:150px;display:block;border:1px solid var(--line)}
 <div class="hb" id="hb5" hidden></div>
 </div>
 <div id="msg"></div>
-<div id="cmp" hidden><svg viewBox="0 0 100 100"><g id="rose"><circle cx="50" cy="50" r="46" fill="rgba(0,0,0,.5)" stroke="#fff" stroke-width="3"/><path d="M50 6v8M50 86v8M6 50h8M86 50h8" stroke="#fff" stroke-width="3"/><text x="50" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="#ff6b5e">K</text><text x="50" y="80" text-anchor="middle" font-size="17" fill="#fff">G</text><text x="81" y="56" text-anchor="middle" font-size="17" fill="#fff">D</text><text x="19" y="56" text-anchor="middle" font-size="17" fill="#fff">B</text></g><path d="M50 0l-7 12h14z" fill="#ff6b5e"/></svg><div id="hdg">–</div><button id="cu">Derece</button></div>
+<div id="cmp" hidden><svg viewBox="0 0 100 100"><g id="rose"><circle cx="50" cy="50" r="46" fill="rgba(0,0,0,.5)" stroke="#fff" stroke-width="3"/><path d="M50 6v8M50 86v8M6 50h8M86 50h8" stroke="#fff" stroke-width="3"/><text x="50" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="#ff6b5e">K</text><text x="50" y="80" text-anchor="middle" font-size="17" fill="#fff">G</text><text x="81" y="56" text-anchor="middle" font-size="17" fill="#fff">D</text><text x="19" y="56" text-anchor="middle" font-size="17" fill="#fff">B</text></g><path d="M50 0l-7 12h14z" fill="#ff6b5e"/></svg><div id="hdg">–</div><button id="cu">Derece</button><div id="nrt"></div></div>
 
 <div class="sh" id="sh1" hidden><div class="hd"><b>Menü</b><button class="cl">✕</button></div>
 <div class="row"><button class="main" id="go">Kaydı başlat</button><select id="cs"><option value="dd">Ondalık derece</option><option value="dms">Derece-dk-sn</option><option value="utm">UTM</option><option value="mgrs" selected>MGRS</option><option value="swiss">İsviçre (LV95)</option></select></div>
@@ -808,11 +816,15 @@ canvas{width:100%;height:150px;display:block;border:1px solid var(--line)}
 <div class="row"><button id="r0">Rota çiz</button><button id="r9">Yüklüyü düzenle</button><button id="r8">Ters çevir</button><button id="r5">İzi rotaya al</button></div>
 <input type="file" id="fl" accept=".gpx,.kml,.kmz,.json,.geojson"><label><input type="checkbox" id="mg"> Yüklenen rotayı mevcutla birleştir</label>
 <div id="rt" class="m">Rota yüklenmedi. Rotadan 30 m uzaklaşınca sesli uyarı verir.</div>
+<label><input type="checkbox" id="rdd" checked> Eğim/rakım verisini de indir (DEM)</label>
 <div class="row"><button id="rp">Yükseklik profili</button><button id="rdl">Çevresini indir</button></div>
 <canvas id="rpf" width="640" height="150"></canvas><div id="rpm" class="m"></div><div id="rdm" class="m"></div></details>
 <details><summary>İstatistik ve grafik</summary>
 <select id="gm"><option value="ed">Yükseklik / mesafe (eğim renkli)</option><option value="et">Yükseklik / zaman</option><option value="sd">Hız / mesafe</option></select>
 <canvas id="pf" width="640" height="150"></canvas><div id="pm" class="m"></div><div id="sx" class="m"></div>
+<label>İz rengi <select id="trc"><option value="">Tek renk</option><option value="speed">Hıza göre</option><option value="slope">Eğime göre</option><option value="ele">Rakıma göre</option></select></label>
+<div class="row"><button id="pbb">▶ İzi oynat</button><select id="pbs"><option value="10">×10</option><option value="30" selected>×30</option><option value="100">×100</option><option value="300">×300</option></select></div>
+<input type="range" id="pbr" min="0" max="1000" value="0" style="width:100%"><div id="pbx" class="m"></div>
 <div class="m">Kilometre turları</div><ul id="laps"></ul></details>
 <details><summary>Bölgeler</summary>
 <div class="row"><button data-sh="rect">Kare</button><button data-sh="circle">Daire</button><button data-sh="tri">Üçgen</button><button data-sh="poly">Çokgen</button></div>
@@ -824,27 +836,40 @@ canvas{width:100%;height:150px;display:block;border:1px solid var(--line)}
 <details><summary>Güneş ve pil</summary><div id="sunx" class="m"></div>
 <label>Karanlıktan önce uyar <select id="sw"><option value="0">Kapalı</option><option value="30">30 dk</option><option value="60" selected>60 dk</option><option value="90">90 dk</option><option value="120">120 dk</option></select></label>
 <label>Düşük pilde tasarruf <select id="bl"><option value="0">Kapalı</option><option value="30">%30</option><option value="20" selected>%20</option><option value="15">%15</option><option value="10">%10</option></select></label></details>
-<details><summary>Hava durumu</summary><div class="row"><button id="wx">Tahmini getir</button></div><div class="m">Rota varsa başlangıç, orta ve bitiş için; yoksa bulunduğun yer için. İnternet gerekir.</div><div id="wxo" class="m" style="white-space:pre-wrap"></div></details>
+<details><summary>Hava durumu</summary><div class="row"><button id="wx">Tahmini getir</button></div><label><input type="checkbox" id="wxa"> Otomatik yenile (15 dk) ve fırtına uyarısı</label><div class="m">Rota varsa rotanın noktaları için, varış saatlerine göre; yoksa bulunduğun yer için. İnternet gerekir; son tahmin saklanır.</div><div id="wxo" class="m" style="white-space:pre-wrap"></div></details>
 <details><summary>Yürüyüş planı</summary>
 <label>Hız <select id="wpace"><option value="3">3 km/s</option><option value="4" selected>4 km/s</option><option value="5">5 km/s</option></select></label>
 <label>Etap <select id="wleg"><option value="2">2 km</option><option value="5" selected>5 km</option><option value="10">10 km</option></select></label>
 <label>Mola <select id="wbrk"><option value="0">Yok</option><option value="45">45 dk'da bir</option><option value="60" selected>60 dk'da bir</option><option value="90">90 dk'da bir</option></select></label>
 <label>Başlangıç saati <input type="time" id="wst"></label>
-<div class="row"><button id="wgo">Planı hesapla</button></div><div id="wout" class="m" style="white-space:pre-wrap"></div></details>
+<label>Günlük yürüme <select id="wdh"><option value="0">Tek gün</option><option value="4">4 saat</option><option value="5">5 saat</option><option value="6">6 saat</option><option value="7">7 saat</option><option value="8">8 saat</option></select></label>
+<div class="row"><button id="wgo">Planı hesapla</button><button id="wcamp" hidden>Kamp pinleri ekle</button></div><div id="wout" class="m" style="white-space:pre-wrap"></div></details>
 <details><summary>Güvenlik zamanlayıcısı</summary>
 <label>Süre <select id="gd"><option value="30">30 dk</option><option value="60">1 saat</option><option value="120" selected>2 saat</option><option value="180">3 saat</option><option value="240">4 saat</option></select></label>
 <div class="row"><button class="main" id="gstart">Başlat</button><button id="gstop">Durdur</button></div>
 <div id="gst" class="m">Kapalı. Süre dolunca alarm çalar; 5 dk içinde “İyiyim” demezsen acil mesaj hazırlanır. Sayfa açık ve ekran uyanık olmalı.</div></details>
 <details><summary>Acil durum</summary><div class="row"><button id="ec">Koordinatı kopyala</button><button id="es">Paylaş</button><button id="ems">SMS</button></div><textarea id="emt" rows="6" style="width:100%;font:13px monospace" readonly></textarea></details>
+<details><summary>Sesli bildirimler</summary>
+<label><input type="checkbox" id="vo"> Sesli bildirimleri aç</label>
+<label>Sesli özet <select id="vsum"><option value="0">Kapalı</option><option value="5">5 dk</option><option value="10" selected>10 dk</option><option value="15">15 dk</option><option value="30">30 dk</option></select></label>
+<div class="row"><button id="vtest">Sesi dene</button><button id="ntp">Bildirim izni</button></div>
+<div class="m">Kilometre turu, rotadan sapma, pine yaklaşma, hedef, gün batımı ve pil uyarıları sesli söylenir. Telefonda Türkçe ses yüklü olmalı.</div></details>
+<details><summary>Yedekleme ve depolama</summary>
+<div class="row"><button class="main" id="bkb">Yedek al</button></div>
+<label><input type="checkbox" id="bkk"> API anahtarlarını da ekle</label>
+<div class="m">Yedekten geri yükle</div><input type="file" id="bki" accept=".json">
+<div class="row"><button id="bkp">Kalıcı depolama iste</button></div><div id="bks" class="m"></div></details>
 <details><summary>Uygulama (PWA)</summary><div id="pwas" class="m"></div><div class="row"><button id="pwab" hidden>Ana ekrana ekle</button></div><div class="m">iPhone: Safari → Paylaş → Ana Ekrana Ekle.</div></details>
 <details><summary>GPS ayarları</summary>
 <label>Doğruluk eşiği <select id="fa"><option value="10">±10 m</option><option value="20">±20 m</option><option value="40" selected>±40 m</option><option value="100">±100 m</option></select></label>
 <label><input type="checkbox" id="fj" checked> Sıçrama filtresi</label>
 <label><input type="checkbox" id="bt"> Pil tasarrufu</label>
 <label>Rakım düzeltmesi (m) <input type="number" id="ao" value="0" style="width:90px"></label>
-<label>Milyem sistemi <select id="mt"><option value="6400">6400 (NATO)</option><option value="6000">6000</option></select></label></details>
+<label>Milyem sistemi <select id="mt"><option value="6400">6400 (NATO)</option><option value="6000">6000</option></select></label>
+<label>Kuzey referansı <select id="nr"><option value="true">Gerçek kuzey</option><option value="mag">Manyetik kuzey</option></select></label><div id="dcx" class="m"></div></details>
 <details><summary>Ekranda göster</summary>
-<label><input type="checkbox" data-h="hb1" checked> Koordinat</label><label><input type="checkbox" data-h="hb2" checked> Ölçek</label><label><input type="checkbox" data-h="hb3" checked> GPS ve istatistik</label><label><input type="checkbox" data-h="cmp" checked> Pusula</label></details></div>
+<label><input type="checkbox" data-h="hb1" checked> Koordinat</label><label><input type="checkbox" data-h="hb2" checked> Ölçek</label><label><input type="checkbox" data-h="hb3" checked> GPS ve istatistik</label><label><input type="checkbox" data-h="cmp" checked> Pusula</label>
+<label><input type="checkbox" id="gl"> Eldiven modu (büyük düğmeler)</label></details></div>
 
 <div class="sh" id="sh2" hidden><div class="hd"><b>Haritalar</b><button class="cl">✕</button></div>
 <select id="bm"><option value="topo">Topo harita</option><option value="osm">Sokak haritası</option><option value="sat">Uydu</option></select>
@@ -855,6 +880,13 @@ canvas{width:100%;height:150px;display:block;border:1px solid var(--line)}
 <label>Gölgeli kabartma <input type="checkbox" id="hsOn"></label>
 <label>Saydamlık <input type="range" id="hsOp" min="0.1" max="1" step="0.05" value="0.6"></label>
 <label>Yer adları (uydu üstüne) <input type="checkbox" id="lbOn"></label>
+<label>Eğim haritası (DEM) <input type="checkbox" id="slOn"></label>
+<label>Eğim türü <select id="slm"><option value="genel">Genel (5–45°+)</option><option value="cig">Çığ eğimi (27–45°)</option></select></label>
+<label>Eğim saydamlığı <input type="range" id="slOp" min="0.2" max="1" step="0.05" value="0.7"></label>
+<div class="m">Yeşil &lt;15°, sarı 15–25°, turuncu 25–30°, kırmızı 30–35°, mor 35–45°, koyu &gt;45°. Veri yaklaşık 30 m çözünürlüklüdür; yalnızca bilgi içindir, çığ güvenliği için tek başına kullanma.</div>
+<label>Yağış radarı (son 2 saat) <input type="checkbox" id="rdOn"></label>
+<div class="row"><button id="rdP">▶ Oynat</button></div><input type="range" id="rdT" min="0" max="11" value="11" style="width:100%"><div id="rdx" class="m"></div>
+<div class="m">Radar: Rain Viewer (rainviewer.com). Kapsama her ülkede aynı değildir; yalnızca bilgi içindir.</div>
 <label>Parlaklık <input type="range" id="fb" min="0.5" max="1.5" step="0.05" value="1"></label>
 <label>Kontrast <input type="range" id="fc" min="0.5" max="1.5" step="0.05" value="1"></label>
 <label>Doygunluk <input type="range" id="fs" min="0" max="2" step="0.05" value="1"></label></details>
@@ -868,7 +900,8 @@ canvas{width:100%;height:150px;display:block;border:1px solid var(--line)}
 <div class="row"><button id="ksave">Kaydet</button></div></details>
 <details><summary>Çevrimdışı</summary>
 <div class="row"><select id="dz"><option value="1">+1</option><option value="2" selected>+2</option><option value="3">+3</option><option value="4">+4</option></select><button id="dl">Alanı indir</button><button id="clr">Sil</button></div>
-<div id="dm" class="m"></div><div id="cn" class="m"></div></details></div>
+<div id="dm" class="m"></div><div id="cn" class="m"></div>
+<label><input type="checkbox" id="dlv"> İndirilen alanları haritada göster</label><ul id="dll"></ul></details></div>
 
 <div class="sh" id="sh3" hidden><div class="hd"><b>Pinler</b><button class="cl">✕</button></div>
 <div class="row"><button class="main" id="wp">Pin ekle</button><select id="pfi"></select><select id="pfc"></select></div><ul id="wps"></ul>
@@ -1117,7 +1150,8 @@ else if (typeof exports === 'object'){
 var $=function(i){return document.getElementById(i)},D=Math.PI/180;
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 /* IndexedDB tile cache */
-var db;var rq=indexedDB.open("patika",1);rq.onupgradeneeded=function(){rq.result.createObjectStore("t")};rq.onsuccess=function(){db=rq.result;cnt()};
+var db,dbRes,dbp=new Promise(function(r){dbRes=r}),rq;
+try{rq=indexedDB.open("patika",2);rq.onupgradeneeded=function(){var d=rq.result;if(!d.objectStoreNames.contains("t"))d.createObjectStore("t");if(!d.objectStoreNames.contains("k"))d.createObjectStore("k")};rq.onsuccess=function(){db=rq.result;cnt();dbRes(db)};rq.onerror=function(){dbRes(null)}}catch(e){dbRes(null)}
 function gt(k){return new Promise(function(r){if(!db)return r(null);try{var q=db.transaction("t").objectStore("t").get(k);q.onsuccess=function(){r(q.result||null)};q.onerror=function(){r(null)}}catch(e){r(null)}})}
 function pt(k,v){if(!db)return;try{db.transaction("t","readwrite").objectStore("t").put(v,k)}catch(e){}}
 function cnt(){if(!db)return;var q=db.transaction("t").objectStore("t").count();q.onsuccess=function(){$("cn").textContent="Önbellekte "+q.result+" karo var."}}
@@ -1172,8 +1206,8 @@ if(list.length>3000){$("dm").textContent="Alan çok büyük ("+list.length+" kar
 var i=0,ok=0;async function w(){while(i<list.length){var t=list[i++],k=L0.options.id+"/"+t.join("/");
 try{if(!(await gt(k))){var r=await fetch(url(L0,t[0],t[1],t[2]));pt(k,await r.blob())}ok++}catch(e){}
 $("dm").textContent=ok+" / "+list.length+" karo indirildi"}}
-await Promise.all([w(),w(),w(),w()]);$("dm").textContent="Bitti: "+ok+" / "+list.length+" karo kaydedildi.";cnt()};
-$("clr").onclick=function(){if(db){db.transaction("t","readwrite").objectStore("t").clear().onsuccess=function(){$("dm").textContent="Önbellek silindi.";cnt()}}};
+await Promise.all([w(),w(),w(),w()]);$("dm").textContent="Bitti: "+ok+" / "+list.length+" karo kaydedildi.";cnt();dlRec("Alan "+new Date().toLocaleString("tr-TR",{dateStyle:"short",timeStyle:"short"}),"alan",L0.options.id,list)};
+$("clr").onclick=function(){if(db){db.transaction("t","readwrite").objectStore("t").clear().onsuccess=function(){$("dm").textContent="Önbellek silindi.";cnt();DLS=[];dlSave();dlRender()}}};
 /* coordinates */
 function dms(v,p,n){var h=v<0?n:p;v=Math.abs(v);var d=Math.floor(v),m=Math.floor((v-d)*60),s=((v-d)*60-m)*60;return d+"°"+m+"'"+s.toFixed(1)+'"'+h}
 function utm(lat,lon){var zn=Math.floor((lon+180)/6)+1,l0=((zn-1)*6-177)*D,f=lat*D,e2=0.00669438,ep=e2/(1-e2),a=6378137,sn=Math.sin(f),N=a/Math.sqrt(1-e2*sn*sn),T=Math.tan(f)*Math.tan(f),C=ep*Math.cos(f)*Math.cos(f),A=Math.cos(f)*(lon*D-l0),e4=e2*e2,e6=e4*e2;
@@ -1203,7 +1237,7 @@ if(mpts.length)B("Ölçümü sil",function(){clearM();map.closePopup()});
 B("Rotaya ekle",function(){plan.push([ll.lat,ll.lng]);pu();map.closePopup()});
 L.popup().setLatLng(ll).setContent(d).openOn(map)});
 /* state */
-var pts=[],wps=[],route=[],watch=null,t0=0,dist=0,gain=0,tick=null,lastAlt=null,fitted=false,lock=null,lastBeep=0,ac,cEl=false,lastFix=null,cpOn=false,cpF=null,rec=false,follow=true,tgt=null,loss=0,lt=0,mov=0,stp=0,mxs=0,laps=[],mag=0,spNow=0,mA=null,plan=[],mB=null,tvia=[],eA=null,eB=null,lastH=null,lastS="",uMil=false;
+var pts=[],wps=[],route=[],watch=null,t0=0,dist=0,gain=0,tick=null,lastAlt=null,fitted=false,lock=null,lastBeep=0,ac,cEl=false,lastFix=null,cpOn=false,cpF=null,rec=false,follow=true,tgt=null,loss=0,lt=0,mov=0,stp=0,mxs=0,laps=[],mag=0,spNow=0,mA=null,plan=[],mB=null,tvia=[],eA=null,eB=null,lastH=null,lastS="",uMil=false,vOff=0,vArr=0,vN=0,decl=0;
 var line=L.polyline([],{color:"#2f6b4f",weight:5}).addTo(map),rl=L.polyline([],{color:"#b5532a",weight:4,dashArray:"8 8",bubblingMouseEvents:false}).addTo(map),wg=L.layerGroup().addTo(map);
 var me=L.circleMarker([0,0],{radius:8,color:"#fff",weight:2,fillColor:"#1d6fd1",fillOpacity:1});
 var dirs=["K","KD","D","GD","G","GB","B","KB"];
@@ -1225,34 +1259,34 @@ if(m==="ed"){var dd=b.d-a.d;if(dd>0.5){var gr=Math.abs(b.ele-a.ele)/dd*100;if(gr
 g.strokeStyle=col;g.beginPath();g.moveTo(X(a),Y(V(a)));g.lineTo(X(b),Y(V(b)));g.stroke()}
 $("pm").textContent=(m==="sd"?"Hız ":"Rakım ")+"en düşük "+Math.round(mn)+" · en yüksek "+Math.round(mx)+(m==="sd"?" km/s":" m")+(m==="ed"?" · en dik %"+Math.round(ms)+" (yeşil<10, sarı<25, turuncu<40, kırmızı≥40)":"")}
 function onPos(pos){var p={lat:pos.coords.latitude,lon:pos.coords.longitude,ele:pos.coords.altitude!=null?pos.coords.altitude+(+$("ao").value||0):null,t:pos.timestamp},ll=[p.lat,p.lon];
-lastFix=p;if(!me._map)me.addTo(map);me.setLatLng(ll);$("coord").textContent=fc(p.lat,p.lon);$("acc").textContent="±"+Math.round(pos.coords.accuracy)+" m";if(p.ele!=null)$("alt").textContent=Math.round(p.ele);var sp=pos.coords.speed;$("spd").textContent=sp!=null?(sp*3.6).toFixed(1):"0.0";spNow=sp||0;if(spNow>=1.5&&pos.coords.heading!=null&&!isNaN(pos.coords.heading))setHdg(pos.coords.heading,"GPS");updT();rtProg(p);chkPins(p);
+var first=!lastFix;lastFix=p;if(first)setTimeout(updDecl,0);if(!me._map)me.addTo(map);me.setLatLng(ll);$("coord").textContent=fc(p.lat,p.lon);$("acc").textContent="±"+Math.round(pos.coords.accuracy)+" m";if(p.ele!=null)$("alt").textContent=Math.round(p.ele);var sp=pos.coords.speed;$("spd").textContent=sp!=null?(sp*3.6).toFixed(1):"0.0";spNow=sp||0;if(spNow>=1.5&&pos.coords.heading!=null&&!isNaN(pos.coords.heading))setHdg(pos.coords.heading,"GPS");updT();rtProg(p);chkPins(p);chkFence(p);
 if(!fitted){map.setView(ll,16);fitted=true}
 if(pos.coords.accuracy>+$("fa").value){$("msg").textContent="Sinyal zayıf (±"+Math.round(pos.coords.accuracy)+" m), nokta atlandı.";return}
 var msg=rec?"Kayıt sürüyor":"";
-if(route.length>1){var o=off(p);if(o>30){msg="Rotadan "+Math.round(o)+" m uzaktasın!";if(Date.now()-lastBeep>5000){beep();lastBeep=Date.now()}}else msg+=" · rotadasın ("+Math.round(o)+" m)"}
+if(route.length>1){var o=off(p);if(o>30){msg="Rotadan "+Math.round(o)+" m uzaktasın!";if(Date.now()-vOff>20000){vOff=Date.now();say("Rotadan "+Math.round(o)+" metre uzaktasın")}if(Date.now()-lastBeep>5000){beep();lastBeep=Date.now()}}else msg+=" · rotadasın ("+Math.round(o)+" m)"}
 if(Date.now()>hold)$("msg").textContent=msg;
 if(follow)map.panTo(ll);if(!rec)return;var dt=lt?Math.min(10,(p.t-lt)/1000):0;lt=p.t;if((sp||0)>0.5)mov+=dt;else stp+=dt;if(sp!=null&&sp>mxs)mxs=sp;var l=pts[pts.length-1];
 if(l){var d=hav(l,p);if(d<3)return;if($("fj").checked&&d/Math.max(1,(p.t-l.t)/1000)>25){$("msg").textContent="Sıçrama filtrelendi.";return}dist+=d;if(!cEl&&spNow<1.5)setHdg(brg(l,p),"GPS");
-while(dist>=(laps.length+1)*1000){var lt2=(Date.now()-t0)/1000;laps.push(lt2);var li=document.createElement("li");li.textContent=laps.length+" km — "+fmt(lt2);$("laps").appendChild(li);toast(laps.length+" km: "+fmt(lt2))}}
+while(dist>=(laps.length+1)*1000){var lt2=(Date.now()-t0)/1000;laps.push(lt2);var li=document.createElement("li");li.textContent=laps.length+" km — "+fmt(lt2);$("laps").appendChild(li);toast(laps.length+" km: "+fmt(lt2));say(laps.length+" kilometre tamamlandı. Süre "+spkT(lt2))}}
 if(p.ele!=null){if(lastAlt==null)lastAlt=p.ele;else{var df=p.ele-lastAlt;if(df>=3){gain+=df;lastAlt=p.ele}else if(df<=-3){loss+=-df;lastAlt=p.ele}}}
 p.d=dist;p.s=sp;pts.push(p);line.addLatLng(ll);
 $("alt").textContent=p.ele!=null?Math.round(p.ele):"–";var sp=pos.coords.speed;$("spd").textContent=sp!=null?(sp*3.6).toFixed(1):"0.0";
 stats();if(pts.length%5===0)save()}
 async function wl(){try{if(navigator.wakeLock)lock=await navigator.wakeLock.request("screen")}catch(e){}}
 document.addEventListener("visibilitychange",function(){if(rec&&document.visibilityState==="visible")wl()});
-function startGps(){if(watch!==null||!navigator.geolocation)return;watch=navigator.geolocation.watchPosition(onPos,function(e){$("msg").textContent=e.code==1?"Konum izni reddedildi.":"Konum alınamadı: "+e.message},{enableHighAccuracy:!$("bt").checked,maximumAge:$("bt").checked?5000:0,timeout:20000})}
+function startGps(){if(watch!==null||!navigator.geolocation)return;watch=navigator.geolocation.watchPosition(function(p){if(natId==null)onPos(p)},function(e){$("msg").textContent=e.code==1?"Konum izni reddedildi.":"Konum alınamadı: "+e.message},{enableHighAccuracy:!$("bt").checked,maximumAge:$("bt").checked?5000:0,timeout:20000})}
 $("go").onclick=function(){var b=this;
-if(rec){rec=false;clearInterval(tick);if(lock){lock.release();lock=null}save();if(pts.length>=10)tkAdd();b.textContent="Kaydı başlat";b.className="main";$("msg").textContent="Kayıt durdu.";return}
+if(rec){rec=false;clearInterval(tick);if(lock){lock.release();lock=null}save();natStop();if(pts.length>=10)tkAdd();b.textContent="Kaydı başlat";b.className="main";$("msg").textContent="Kayıt durdu.";return}
 if(!navigator.geolocation){$("msg").textContent="Bu cihaz konumu desteklemiyor.";return}
 if(pts.length&&!confirm("Önceki kayıt silinsin mi?"))return;
 try{ac=ac||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}
-pts=[];dist=0;gain=0;loss=0;lt=0;mov=0;stp=0;mxs=0;laps=[];$("laps").innerHTML="";lastAlt=null;line.setLatLngs([]);t0=Date.now();rec=true;stats();wl();startGps();
+pts=[];dist=0;gain=0;loss=0;lt=0;mov=0;stp=0;mxs=0;laps=[];$("laps").innerHTML="";lastAlt=null;line.setLatLngs([]);t0=Date.now();rec=true;vN=0;natStart();stats();wl();startGps();
 tick=setInterval(function(){$("time").textContent=fmt((Date.now()-t0)/1000)},1000);b.textContent="Kaydı durdur";b.className="stop";$("msg").textContent="Kayıt başladı."};
 startGps();
 $("cp").onclick=async function(){var b=this;
 if(cpOn){window.removeEventListener("deviceorientationabsolute",cpF,true);window.removeEventListener("deviceorientation",cpF,true);cpOn=false;cEl=false;setHdg(null);b.classList.remove("on");$("cmp").hidden=true;return}
 try{if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission&&await DeviceOrientationEvent.requestPermission()!=="granted")return}catch(e){}
-cpF=function(e){var h=e.webkitCompassHeading!=null?e.webkitCompassHeading:(e.absolute&&e.alpha!=null?360-e.alpha:null);if(h==null)return;cEl=true;mag=h;if(spNow<1.5)setHdg(h,"M")};
+cpF=function(e){var h=e.webkitCompassHeading!=null?e.webkitCompassHeading:(e.absolute&&e.alpha!=null?360-e.alpha:null);if(h==null)return;cEl=true;mag=h;if(spNow<1.5)setHdg((h+decl+360)%360,"P")};
 window.addEventListener("deviceorientationabsolute",cpF,true);window.addEventListener("deviceorientation",cpF,true);cpOn=true;b.classList.add("on");$("cmp").hidden=false};
 /* panels */
 var shs=document.querySelectorAll(".sh"),bts=document.querySelectorAll("[data-p]");
@@ -1269,13 +1303,13 @@ $("lk").onclick=function(){follow=!follow;lkUi();if(follow&&lastFix)map.setView(
 map.on("dragstart",function(){follow=false;lkUi()});lkUi();
 var eleC={},tedit=false;
 function dtxt(m){return m<1000?Math.round(m)+" m":(m/1000).toFixed(2)+" km"}
-function fmtAng(d){d=(d%360+360)%360;if(uMil){var m=$("mt").value==="6000"?6000:6400;return Math.round(d*m/360)%m+" mil"}return Math.round(d)%360+"°"}
+function fmtAng(d){d=toRef(d);d=(d%360+360)%360;if(uMil){var m=$("mt").value==="6000"?6000:6400;return Math.round(d*m/360)%m+" mil"}return Math.round(d)%360+"°"}
 function setHdg(h,src){if(h!==undefined)lastH=h;lastS=src||"";if(lastH==null||isNaN(lastH)){lastH=null;$("hdg").textContent="–";$("rose").setAttribute("transform","");return}
-var d=(lastH%360+360)%360;$("rose").setAttribute("transform","rotate("+(-d)+" 50 50)");$("hdg").textContent=fmtAng(d)+" "+dirs[Math.round(d/45)%8]+(lastS?" "+lastS:"")}
+var d=(lastH%360+360)%360,dr=(toRef(d)%360+360)%360;$("rose").setAttribute("transform","rotate("+(-dr)+" 50 50)");$("hdg").textContent=fmtAng(d)+" "+dirs[Math.round(dr/45)%8]+(lastS?" "+lastS:"")}
 $("cu").onclick=function(){uMil=!uMil;this.textContent=uMil?"Milyem":"Derece";setHdg(lastH,lastS)};
 $("mt").onchange=function(){setHdg(lastH,lastS)};
 function plenA(a){var t=0;for(var i=1;i<a.length;i++)t+=hav({lat:a[i-1][0],lon:a[i-1][1]},{lat:a[i][0],lon:a[i][1]});return t}
-function getEle(pts,cb,eb){if(navigator.onLine===false){if(eb)eb();return}var k=pts.map(function(p){return p[0].toFixed(4)+","+p[1].toFixed(4)}),need=k.filter(function(x){return!(x in eleC)});
+function getEleNet(pts,cb,eb){if(navigator.onLine===false){if(eb)eb();return}var k=pts.map(function(p){return p[0].toFixed(4)+","+p[1].toFixed(4)}),need=k.filter(function(x){return!(x in eleC)});
 function done(){cb(k.map(function(x){return eleC[x]}))}
 if(!need.length){done();return}
 fetch("https://api.open-meteo.com/v1/elevation?latitude="+need.map(function(x){return x.split(",")[0]}).join(",")+"&longitude="+need.map(function(x){return x.split(",")[1]}).join(",")).then(function(r){return r.json()}).then(function(j){(j.elevation||[]).forEach(function(v,i){eleC[need[i]]=v});done()}).catch(function(){if(eb)eb()})}
@@ -1286,6 +1320,7 @@ tgl.on("click",tLine);thit.on("click",tLine);
 function tpath(){var a=[];if(lastFix)a.push([lastFix.lat,lastFix.lon]);tvia.forEach(function(q){a.push(q)});if(tgt)a.push([tgt.lat,tgt.lon]);return a}
 function updT(){tgl.unbindTooltip();if(!tgt){tgl.setLatLngs([]);thit.setLatLngs([]);$("tg").textContent="→ hedef yok";return}
 var a=tpath();tgl.setLatLngs(a);thit.setLatLngs(a);if(a.length<2){$("tg").textContent="→ GPS bekleniyor";return}
+var dd2=lastFix?hav({lat:lastFix.lat,lon:lastFix.lon},tgt):1e9;if(dd2<20&&!vArr){vArr=1;toast("Hedefe ulaştın");say("Hedefe ulaştın");if(navigator.vibrate)navigator.vibrate([300,100,300])}else if(dd2>50)vArr=0;
 var n=plenA(a),P=lastFix?{lat:lastFix.lat,lon:lastFix.lon}:{lat:a[0][0],lon:a[0][1]},el="";
 if(tgt.ele!=null){el=" · ▲"+Math.round(tgt.ele)+" m";if(lastFix&&lastFix.ele!=null){var df=tgt.ele-lastFix.ele;el+=" ("+(df>=0?"+":"")+Math.round(df)+" m)"}}
 var txt=dtxt(n)+" · "+fmtAng(brg(P,tgt))+el;tgl.bindTooltip(txt.replace(" · ","<br>"),{permanent:true,className:"tt"});$("tg").textContent="→ "+txt+" (dokun: kaldır)"}
@@ -1441,7 +1476,7 @@ mbl.addTo(map);$("msg").textContent="MBTiles yüklendi (z"+mz[0]+"–"+mz[1]+", 
 try{r=db.exec("select value from metadata where name='bounds'");if(r[0]){var v=r[0].values[0][0].split(",").map(Number);map.fitBounds([[v[1],v[0]],[v[3],v[2]]])}}catch(e){}})}).catch(function(e){$("msg").textContent="MBTiles açılamadı: "+e.message})};
 /* v4 */
 function openRota(){closeAll();$("sh1").hidden=false;var b=document.querySelector('[data-p="sh1"]');if(b)b.classList.add("on");var d=$("sh1").querySelectorAll("details");d[0].open=true}
-var hold=0;function toast(t,ms){$("msg").textContent=t;hold=Date.now()+(ms||6000)}
+var hold=0;function toast(t,ms){$("msg").textContent=t;hold=Date.now()+(ms||6000);if(document.hidden||isNat())notify(t)}
 function hm(s){return Math.floor(s/3600)+" sa "+Math.round(s%3600/60)+" dk"}
 /* gün ışığı, gece modu */
 var rtRem=0,rtSpd=1.1,sunWarned="",nightWarned="";
@@ -1452,14 +1487,14 @@ function sunToday(){var c=sunPos(),d=new Date();d.setHours(12,0,0,0);return sunT
 function applyMode(){var v=$("nm").value,m=v;if(v==="auto"){var t=sunToday(),n=Date.now();m=t&&(n<t[0]||n>t[1])?"dark":""}
 if(m)document.documentElement.setAttribute("data-m",m);else document.documentElement.removeAttribute("data-m");$("nred").hidden=m!=="red";filt()}
 $("nm").onchange=applyMode;
-function sunTick(){var t=sunToday(),now=Date.now(),f=function(x){return new Date(x).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})};
+function sunTick(){updDecl();var t=sunToday(),now=Date.now(),f=function(x){return new Date(x).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})};
 if(!t){$("sunx").textContent="Bu enlemde doğuş/batış hesaplanamadı.";$("sunh").textContent="–";return}
 var left=t[1]-now,dm=Math.round(left/60000),day=new Date().toDateString();
 $("sunx").textContent="Doğuş "+f(t[0])+" · Batış "+f(t[1])+(left>0&&now>t[0]?" · Kalan gün ışığı "+Math.floor(dm/60)+" sa "+dm%60+" dk":now>t[1]?" · Güneş battı":"");
 $("sunh").textContent=now<t[0]?"doğuş "+f(t[0]):now<t[1]?"batış "+f(t[1]):"gece";
 var w=+$("sw").value;
-if(w&&left>0&&left<=w*60000&&sunWarned!==day){sunWarned=day;beep();toast("Gün batımına "+dm+" dk kaldı: dönüşü planla")}
-if(w&&route.length>1&&rtRem>0&&left>0&&rtRem/rtSpd*1000>left&&nightWarned!==day){nightWarned=day;beep();toast("Rota bitmeden karanlık basabilir (kalan ~"+Math.round(rtRem/rtSpd/60)+" dk)")}
+if(w&&left>0&&left<=w*60000&&sunWarned!==day){sunWarned=day;beep();toast("Gün batımına "+dm+" dk kaldı: dönüşü planla");say("Gün batımına "+dm+" dakika kaldı. Dönüşü planla")}
+if(w&&route.length>1&&rtRem>0&&left>0&&rtRem/rtSpd*1000>left&&nightWarned!==day){nightWarned=day;beep();toast("Rota bitmeden karanlık basabilir (kalan ~"+Math.round(rtRem/rtSpd/60)+" dk)");say("Rota bitmeden karanlık basabilir")}
 if($("nm").value==="auto")applyMode()}
 setInterval(sunTick,60000);sunTick();
 /* rota ilerleme */
@@ -1486,8 +1521,9 @@ var L0=cur,zmax=Math.min(L0.options.maxZoom,16),list;
 function build(z1){var set={},out=[],sp=samp(a,Math.max(2,Math.min(2000,Math.round(plenA(a)/150)+1)));for(var z=Math.max(8,z1-6);z<=z1;z++)sp.forEach(function(p){var t=tl(p[0],p[1],z);for(var dx=-1;dx<=1;dx++)for(var dy=-1;dy<=1;dy++){var x=t.x+dx,y=t.y+dy,k=z+"/"+x+"/"+y;if(!set[k]){set[k]=1;out.push([z,x,y])}}});return out}
 list=build(zmax);while(zmax>9&&list.length>4000){zmax--;list=build(zmax)}
 if(list.length>4000){$("rdm").textContent="Rota çok uzun ("+list.length+" karo). Daha kısa parçalara böl.";return}
-var i=0,ok=0,z0=Math.max(8,zmax-6);async function w(){while(i<list.length){var t=list[i++],k=L0.options.id+"/"+t.join("/");try{if(!(await gt(k))){var r=await fetch(url(L0,t[0],t[1],t[2]));pt(k,await r.blob())}ok++}catch(e){}$("rdm").textContent=ok+" / "+list.length+" karo (z"+z0+"–"+zmax+")"}}
-await Promise.all([w(),w(),w(),w()]);$("rdm").textContent="Bitti: "+ok+" / "+list.length+" karo kaydedildi (z"+z0+"–"+zmax+").";cnt()};
+if($("rdd").checked)list=list.concat(list.filter(function(t){return t[0]>=10&&t[0]<=14}).map(function(t){return[t[0],t[1],t[2],"dem"]}));
+var i=0,ok=0,z0=Math.max(8,zmax-6);async function w(){while(i<list.length){var t=list[i++],dm=t[3]==="dem",k=dm?"dem/"+t[0]+"/"+t[1]+"/"+t[2]:L0.options.id+"/"+t.join("/");try{if(!(await gt(k))){var r=await fetch(dm?DEMU.replace("{z}",t[0]).replace("{x}",t[1]).replace("{y}",t[2]):url(L0,t[0],t[1],t[2]));pt(k,await r.blob())}ok++}catch(e){}$("rdm").textContent=ok+" / "+list.length+" karo (z"+z0+"–"+zmax+")"}}
+await Promise.all([w(),w(),w(),w()]);$("rdm").textContent="Bitti: "+ok+" / "+list.length+" karo kaydedildi (z"+z0+"–"+zmax+").";cnt();dlRec("Rota "+new Date().toLocaleString("tr-TR",{dateStyle:"short",timeStyle:"short"}),"rota",L0.options.id,list)};
 /* acil durum */
 function emText(){var f=lastFix;if(!f)return null;return"ACİL / KONUMUM\nMGRS: "+fcAs("mgrs",f.lat,f.lon)+"\nEnlem, boylam: "+f.lat.toFixed(6)+", "+f.lon.toFixed(6)+(f.ele!=null?"\nRakım: "+Math.round(f.ele)+" m":"")+"\nHarita: https://www.openstreetmap.org/?mlat="+f.lat.toFixed(6)+"&mlon="+f.lon.toFixed(6)+"&zoom=16\nZaman: "+new Date(f.t).toLocaleString("tr-TR")}
 function emShow(){var t=emText();$("emt").value=t||"Konum yok: GPS bekleniyor.";return t}
@@ -1502,22 +1538,27 @@ Object.keys(CAT).forEach(function(k){var o=document.createElement("option");o.va
 $("pcat").onchange=function(){var c=CAT[this.value];if(c){$("pi").value=c[0];$("pc").value=c[1]}};
 (function(){var a=$("pfi"),b=$("pfc");a.innerHTML='<option value="">Tüm simgeler</option>';b.innerHTML='<option value="">Tüm renkler</option>';PI.forEach(function(i){var o=document.createElement("option");o.value=i;o.textContent=i;a.appendChild(o)});Object.keys(PC).forEach(function(k){var o=document.createElement("option");o.value=PC[k];o.textContent=k;b.appendChild(o)});a.onchange=renderWps;b.onchange=renderWps})();
 function pass(w){var a=$("pfi").value,b=$("pfc").value;return(!a||w.icon===a)&&(!b||w.color===b)}
-function chkPins(p){wps.forEach(function(w){if(!w.rad||!w.id)return;var d=hav(p,w);if(d<=w.rad&&!al[w.id]){al[w.id]=1;beep();toast((w.icon||"📍")+" "+w.name+": "+Math.round(d)+" m");if(navigator.vibrate)navigator.vibrate([200,100,200])}else if(d>w.rad*1.5)al[w.id]=0})}
+function chkPins(p){wps.forEach(function(w){if(!w.rad||!w.id)return;var d=hav(p,w);if(d<=w.rad&&!al[w.id]){al[w.id]=1;beep();toast((w.icon||"📍")+" "+w.name+": "+Math.round(d)+" m");say(w.name+" noktasına "+Math.round(d)+" metre kaldı");if(navigator.vibrate)navigator.vibrate([200,100,200])}else if(d>w.rad*1.5)al[w.id]=0})}
 /* pil */
 var batSaved=false;
 if(navigator.getBattery)navigator.getBattery().then(function(b){function u(){var l=Math.round(b.level*100),th=+$("bl").value;$("bat").textContent=l+"%"+(b.charging?" ⚡":"");
-if(th&&l<=th&&!b.charging&&!batSaved){batSaved=true;beep();toast("Pil %"+l+": tasarruf modu açıldı");if(!$("bt").checked){$("bt").checked=true;$("bt").dispatchEvent(new Event("change",{bubbles:true}))}}
+if(th&&l<=th&&!b.charging&&!batSaved){batSaved=true;beep();toast("Pil %"+l+": tasarruf modu açıldı");say("Pil yüzde "+l+". Tasarruf modu açıldı");if(!$("bt").checked){$("bt").checked=true;$("bt").dispatchEvent(new Event("change",{bubbles:true}))}}
 if(b.charging||l>th+5)batSaved=false}
 b.addEventListener("levelchange",u);b.addEventListener("chargingchange",u);$("bl").addEventListener("change",u);u()}).catch(function(){});
 /* kayıtlı izler */
 var TK=[],th2=L.polyline([],{color:"#8a4f1f",weight:4,dashArray:"2 6"}).addTo(map),tkSel={};
-function tkLoad(){try{TK=JSON.parse(localStorage.getItem("patika-tk")||"[]")}catch(e){TK=[]}}
-function tkStore(){try{localStorage.setItem("patika-tk",JSON.stringify(TK));return true}catch(e){$("msg").textContent="Kayıt alanı dolu: eski izleri sil.";return false}}
+function tkSort(){TK.sort(function(a,b){return a.id-b.id})}
+function tkFlush(){return dbp.then(function(d){return new Promise(function(res){if(!d){try{localStorage.setItem("patika-tk",JSON.stringify(TK))}catch(e){toast("İz kaydedilemedi: depolama dolu.")}res();return}
+var tx=d.transaction("k","readwrite"),st=tx.objectStore("k");st.clear();TK.forEach(function(t){st.put(t,t.id)});tx.oncomplete=function(){res()};tx.onerror=tx.onabort=function(){toast("İz kaydedilemedi: depolama dolu olabilir.");res()}})})}
+function tkStore(){tkFlush().then(bkStat);return true}
+function tkLoad(){var ls=null;try{ls=JSON.parse(localStorage.getItem("patika-tk")||"null")}catch(e){}
+return dbp.then(function(d){return new Promise(function(res){if(!d){TK=ls||[];res();return}var rq2=d.transaction("k","readonly").objectStore("k").getAll();
+rq2.onsuccess=function(){TK=rq2.result||[];if(ls&&ls.length){var have={};TK.forEach(function(t){have[t.id]=1});ls.forEach(function(t){if(!have[t.id])TK.push(t)});try{localStorage.removeItem("patika-tk")}catch(e){}tkSort();tkFlush()}tkSort();res()};rq2.onerror=function(){TK=ls||[];res()}})}).then(function(){tkRender();bkStat()})}
 function tkAdd(name){if(pts.length<2)return;var a=pts[0].t,b=pts[pts.length-1].t;
 TK.push({id:Date.now(),name:name||new Date(a).toLocaleString("tr-TR",{dateStyle:"short",timeStyle:"short"}),t0:a,t1:b,dist:dist,gain:gain,loss:loss,mov:mov,stp:stp,mxs:mxs,p:pts.map(function(p){return[+p.lat.toFixed(6),+p.lon.toFixed(6),p.ele==null?null:Math.round(p.ele),p.t]})});
 if(tkStore())$("msg").textContent="İz kaydedildi.";tkRender()}
 function tkOpen(t){if(rec){$("msg").textContent="Önce kaydı durdur.";return}pts=t.p.map(function(q,i){return{lat:q[0],lon:q[1],ele:q[2],t:q[3]!=null?q[3]:i*1000}});var d=0;pts.forEach(function(p,i){if(i)d+=hav(pts[i-1],p);p.d=d});
-dist=t.dist;gain=t.gain;loss=t.loss;mov=t.mov;stp=t.stp;mxs=t.mxs;line.setLatLngs(pts.map(function(p){return[p.lat,p.lon]}));map.fitBounds(line.getBounds());stats();save();$("msg").textContent="İz açıldı: "+t.name}
+dist=t.dist;gain=t.gain;loss=t.loss;mov=t.mov;stp=t.stp;mxs=t.mxs;line.setLatLngs(pts.map(function(p){return[p.lat,p.lon]}));map.fitBounds(line.getBounds());stats();save();trRender(true);pbReset();$("msg").textContent="İz açıldı: "+t.name}
 function tkRender(){var ul=$("tkl");ul.innerHTML="";if(!TK.length){ul.innerHTML="<li><span>Kayıtlı iz yok.</span></li>";return}
 TK.slice().reverse().forEach(function(t){var li=document.createElement("li"),lab=document.createElement("label"),ck=document.createElement("input"),nm=document.createElement("span"),bx=document.createElement("span");
 li.style.flexWrap="wrap";lab.style.margin="0";ck.type="checkbox";ck.checked=!!tkSel[t.id];ck.onchange=function(){tkSel[t.id]=ck.checked};nm.textContent=t.name+" · "+(t.dist/1000).toFixed(2)+" km";
@@ -1532,21 +1573,52 @@ $("tks").onclick=function(){if(pts.length<2){$("msg").textContent="Kaydedilecek 
 $("tkc").onclick=function(){var s2=TK.filter(function(t){return tkSel[t.id]});if(s2.length<2){$("tkr").textContent="Karşılaştırmak için iki iz işaretle.";return}
 var a=s2[0],b=s2[1],v=function(t){return(t.mov>0?t.dist/t.mov*3.6:0).toFixed(1)+" km/s"};
 $("tkr").textContent="A: "+a.name+"\nB: "+b.name+"\nMesafe: "+(a.dist/1000).toFixed(2)+" | "+(b.dist/1000).toFixed(2)+" km\nSüre: "+hm(a.mov+a.stp)+" | "+hm(b.mov+b.stp)+"\nOrt. hız: "+v(a)+" | "+v(b)+"\nTırmanış: "+Math.round(a.gain)+" | "+Math.round(b.gain)+" m\nİniş: "+Math.round(a.loss)+" | "+Math.round(b.loss)+" m"};
-tkLoad();tkRender();
+tkLoad();
 /* v5 */
 function hm2(s){s=Math.round(s/60);return s>=60?Math.floor(s/60)+" sa "+("0"+s%60).slice(-2)+" dk":s+" dk"}
 function openAcil(){closeAll();$("sh1").hidden=false;var b=document.querySelector('[data-p="sh1"]');if(b)b.classList.add("on");[].forEach.call($("sh1").querySelectorAll("details"),function(d){d.open=d.querySelector("summary").textContent==="Acil durum"})}
 /* hava durumu */
 function WC(c){return c===0?"☀️":c<4?"⛅":c<50?"🌫️":c<68?"🌧️":c<78?"❄️":c<83?"🌦️":c<87?"🌨️":"⛈️"}
-$("wx").onclick=function(){var a=plan.length>1?plan:route,P,lb;if(a.length>1){P=samp(a,3);lb=["Başlangıç","Orta","Bitiş"]}else{var c=sunPos();P=[[c.lat,c.lon]];lb=["Konum"]}
-if(navigator.onLine===false){$("wxo").textContent="Tahmin alınamadı: internet gerekir.";return}
+var wxLast=null,wxAl="";
+try{wxLast=JSON.parse(localStorage.getItem("patika-wx")||"null")}catch(e){}
+function wxShow(txt,t,stale){$("wxo").textContent=(stale?"⚠ Çevrimdışı gösteriliyor. ":"")+"Son güncelleme: "+new Date(t).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})+" ("+Math.max(0,Math.round((Date.now()-t)/60000))+" dk önce)\n"+txt}
+function wxUrl(P,els,model){var u="https://api.open-meteo.com/v1/forecast?latitude="+P.map(function(p){return p[0].toFixed(3)}).join(",")+"&longitude="+P.map(function(p){return p[1].toFixed(3)}).join(",");
+if(els)u+="&elevation="+els.map(function(e){return Math.round(e)}).join(",");
+return u+"&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,cape,lifted_index,freezing_level_height,visibility,pressure_msl&forecast_days=3&timezone=auto&wind_speed_unit=kmh"+(model?"&models="+model:"")}
+function wxGet(P,els,ok,fail){var tries=[null,null,"gfs_seamless"];(function go(i){if(i>=tries.length){fail();return}
+fetch(wxUrl(P,els,tries[i]),{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){var a=Array.isArray(j)?j:[j];if(!a.length||!a[0].hourly||!a[0].hourly.time)throw 0;ok(a)}).catch(function(){setTimeout(function(){go(i+1)},i===0?800:0)})})(0)}
+var RL=["","düşük","orta","yüksek"];
+function wxRisk(h,i){var c=h.cape&&h.cape[i]||0,li=h.lifted_index?h.lifted_index[i]:null,pp=h.precipitation_probability&&h.precipitation_probability[i]||0,wc=h.weather_code[i];
+if(wc>=95||c>=2000||(c>=1000&&pp>=40))return 3;if((c>=500&&pp>=30)||(li!=null&&li<=-4&&pp>=30)||(li!=null&&li<=-2&&c>=300&&pp>=40))return 2;return 1}
+function hh(T){return new Date(T).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}
+function idxAt(h,off,T){var iso=new Date(T+off*1000).toISOString().slice(0,13);for(var i=0;i<h.time.length;i++)if(h.time[i].slice(0,13)===iso)return i;return-1}
+function wxRow(h,i){return h.time[i].slice(11,16)+" "+WC(h.weather_code[i])+" "+Math.round(h.temperature_2m[i])+"° (his. "+Math.round(h.apparent_temperature[i])+"°) · yağış %"+h.precipitation_probability[i]+" · rüzgâr "+Math.round(h.wind_speed_10m[i])+"/"+Math.round(h.wind_gusts_10m[i])+" km/s · fırtına "+RL[wxRisk(h,i)]}
+function wxBuild(arr,P,lb,dists,els){var out=[],W=[],pace=(+$("wpace").value||4)*1000/3600,st=$("wst").value?$("wst").value.split(":"):null,now=Date.now(),d0=new Date();if(st)d0.setHours(+st[0],+st[1],0,0);
+var t0=dists&&st&&d0.getTime()>now-36e5?d0.getTime():now,h0=arr[0].hourly,off0=arr[0].utc_offset_seconds||0,i0=Math.max(0,idxAt(h0,off0,now)),mx=1,i,cp=0;
+for(i=i0;i<Math.min(h0.time.length,i0+12);i++){mx=Math.max(mx,wxRisk(h0,i));cp=Math.max(cp,h0.cape&&h0.cape[i]||0)}
+out.push("Fırtına riski (12 sa): "+RL[mx].toUpperCase()+" · en yüksek CAPE "+Math.round(cp)+" J/kg");
+if(mx>=2)W.push("Fırtına riski "+RL[mx]+": açık arazide ve yüksekte dikkat");
+var el0=els?els[0]:(lastFix&&lastFix.ele!=null?lastFix.ele:null),fz=h0.freezing_level_height&&h0.freezing_level_height[i0];
+if(fz!=null)out.push("Don seviyesi: "+Math.round(fz)+" m"+(el0!=null?" (senden "+Math.abs(Math.round(fz-el0))+" m "+(fz>=el0?"yukarıda":"aşağıda")+")":""));
+if(h0.visibility&&h0.visibility[i0]!=null){out.push("Görüş: "+(h0.visibility[i0]/1000).toFixed(1)+" km"+(h0.visibility[i0]<1000?" ⚠ sis":""));if(h0.visibility[i0]<1000)W.push("Görüş 1 km altında")}
+if(h0.pressure_msl){var j=Math.min(h0.time.length-1,i0+3),dp=h0.pressure_msl[j]-h0.pressure_msl[i0];out.push("Basınç (3 sa sonra): "+(dp>=0?"+":"")+dp.toFixed(1)+" hPa"+(dp<=-3?" ⚠ hızlı düşüş, hava bozulabilir":dp>=3?" (yükseliyor)":""));if(dp<=-3)W.push("Basınç hızla düşüyor")}
+if(els)out.push("Sıcaklıklar bulunduğun rakıma göre düzeltilmiştir.");
+out.push("");
+if(dists){arr.forEach(function(a,k){var h=a.hourly,off=a.utc_offset_seconds||0,T=t0+dists[k]/pace*1000,ik=idxAt(h,off,T);out.push(lb[k]+" · "+(dists[k]/1000).toFixed(1)+" km · ~"+hh(T)+(els&&els[k]!=null?" · "+Math.round(els[k])+" m":""));
+if(ik<0){out.push("  veri yok");return}out.push("  "+wxRow(h,ik));if(wxRisk(h,ik)>=2)W.push(lb[k]+" için varış saatinde fırtına riski "+RL[wxRisk(h,ik)]);if(h.wind_gusts_10m[ik]>=60)W.push(lb[k]+": esinti "+Math.round(h.wind_gusts_10m[ik])+" km/s");if(h.precipitation_probability[ik]>=70)W.push(lb[k]+": yağış olasılığı %"+h.precipitation_probability[ik]);if(h.apparent_temperature[ik]<=-5)W.push(lb[k]+": hissedilen "+Math.round(h.apparent_temperature[ik])+"°")})}
+else{for(i=i0;i<Math.min(h0.time.length,i0+12);i+=3)out.push(wxRow(h0,i));for(i=i0;i<Math.min(h0.time.length,i0+12);i++){if(h0.wind_gusts_10m[i]>=60){W.push("Esinti "+Math.round(h0.wind_gusts_10m[i])+" km/s");break}}}
+var seen={};W=W.filter(function(x){if(seen[x])return false;seen[x]=1;return true});
+return{txt:(W.length?"⚠ "+W.join("\n⚠ ")+"\n\n":"")+out.join("\n"),risk:mx}}
+$("wx").onclick=function(){var a=plan.length>1?plan:route,P,lb,dists=null;
+if(a.length>1){var n=Math.min(5,Math.max(2,Math.round(plenA(a)/3000)+1));P=samp(a,n);lb=P.map(function(p,i){return i===0?"Başlangıç":i===P.length-1?"Bitiş":"Nokta "+i});dists=P.map(function(p){return p[2]})}else{var c=sunPos();P=[[c.lat,c.lon]];lb=["Konum"]}
+if(navigator.onLine===false){if(wxLast)wxShow(wxLast.txt,wxLast.t,true);else $("wxo").textContent="Tahmin alınamadı: internet gerekir.";return}
 $("wxo").textContent="Tahmin alınıyor…";
-fetch("https://api.open-meteo.com/v1/forecast?latitude="+P.map(function(p){return p[0].toFixed(3)}).join(",")+"&longitude="+P.map(function(p){return p[1].toFixed(3)}).join(",")+"&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_gusts_10m,weather_code&forecast_days=2&timezone=auto&wind_speed_unit=kmh").then(function(r){return r.json()}).then(function(j){
-var arr=Array.isArray(j)?j:[j],out=[],warn=false;
-arr.forEach(function(d,k){var h=d.hourly,off=d.utc_offset_seconds||0,now=new Date(Date.now()+off*1000).toISOString().slice(0,13),i0=0,i;for(i=0;i<h.time.length;i++){if(h.time[i].slice(0,13)>=now){i0=i;break}}
-out.push(lb[k]+":");for(i=i0;i<Math.min(h.time.length,i0+12);i+=3){var rp=h.precipitation_probability[i],g=h.wind_gusts_10m[i];if(rp>=70||g>=60||h.weather_code[i]>=95)warn=true;
-out.push("  "+h.time[i].slice(11,16)+" "+WC(h.weather_code[i])+" "+Math.round(h.temperature_2m[i])+"° · yağış %"+rp+" · rüzgâr "+Math.round(h.wind_speed_10m[i])+" (esinti "+Math.round(g)+") km/s")}});
-$("wxo").textContent=(warn?"⚠ Dikkat: kuvvetli yağış, rüzgâr ya da fırtına olası.\n":"")+out.join("\n")}).catch(function(){$("wxo").textContent="Tahmin alınamadı: internet gerekir."})};
+function run(els){wxGet(P,els,function(arr){var r=wxBuild(arr,P,lb,dists,els);wxLast={t:Date.now(),txt:r.txt};try{localStorage.setItem("patika-wx",JSON.stringify(wxLast))}catch(e){}wxShow(r.txt,wxLast.t,false);
+var hk=new Date().toISOString().slice(0,13);if(r.risk>=3&&wxAl!==hk){wxAl=hk;beep();toast("⛈ Fırtına riski yüksek");say("Fırtına riski yüksek. Açık arazide dikkatli ol");notify("Fırtına riski yüksek")}},
+function(){if(wxLast)wxShow(wxLast.txt,wxLast.t,true);else $("wxo").textContent="Tahmin alınamadı. Biraz sonra tekrar dene."})}
+getEle(P,function(r){run(r)},function(){run(null)})};
+setInterval(function(){if(!$("wxa").checked||navigator.onLine===false||(document.hidden&&!isNat()))return;if(!wxLast||Date.now()-wxLast.t>15*60000)$("wx").click()},60000);
+if(wxLast)setTimeout(function(){wxShow(wxLast.txt,wxLast.t,navigator.onLine===false)},0);
 /* GPX'ten izi içe aktar */
 function gxStats(P){var d=0,g=0,l=0,mv=0,st=0,mx=0,pe=null;P.forEach(function(q,i){if(i){var dd=hav({lat:P[i-1][0],lon:P[i-1][1]},{lat:q[0],lon:q[1]}),dt=q[3]!=null&&P[i-1][3]!=null?(q[3]-P[i-1][3])/1000:0;d+=dd;if(dt>0){var sp=dd/dt;if(sp>0.5)mv+=dt;else st+=dt;if(sp>mx&&sp<50)mx=sp}}
 if(q[2]!=null){if(pe==null)pe=q[2];else{var df=q[2]-pe;if(df>=3){g+=df;pe=q[2]}else if(df<=-3){l-=df;pe=q[2]}}}});return{dist:d,gain:g,loss:l,mov:mv,stp:st,mxs:mx}}
@@ -1556,18 +1628,30 @@ if(P.length<2){$("tkr").textContent="GPX içinde iz noktası bulunamadı.";retur
 var nm=x.querySelector("trk > name"),q=gxStats(P);TK.push({id:Date.now(),name:(nm&&nm.textContent)||f.name.replace(/\.gpx$/i,""),t0:P[0][3]||Date.now(),t1:P[P.length-1][3]||Date.now(),dist:q.dist,gain:q.gain,loss:q.loss,mov:q.mov,stp:q.stp,mxs:q.mxs,p:P});
 if(tkStore())$("tkr").textContent="GPX içe aktarıldı: "+P.length+" nokta."+(P[0][3]==null?" (Zaman bilgisi yok: hız ve süre hesaplanamadı.)":"");tkRender()}catch(e){$("tkr").textContent="GPX okunamadı: "+e.message}};r.readAsText(f)};
 /* yürüyüş planlayıcı (Naismith: 1 m tırmanış ≈ 3,6 sn) */
+var wDays=[];
 $("wgo").onclick=function(){var a=plan.length>1?plan:route;if(a.length<2){$("wout").textContent="Önce bir rota çiz ya da yükle.";return}
-var pace=+$("wpace").value*1000/3600,leg=+$("wleg").value*1000,brk=+$("wbrk").value,n=Math.min(100,Math.max(10,Math.round(plenA(a)/40)+1)),sp=samp(a,n);$("wout").textContent="Hazırlanıyor…";
-function go(el){var cT=[0],asc=[0],i;for(i=1;i<sp.length;i++){var d=sp[i][2]-sp[i-1][2],de=el&&el[i]!=null&&el[i-1]!=null?el[i]-el[i-1]:0,up=de>1?de:0;asc.push(asc[i-1]+up);cT.push(cT[i-1]+d/pace+up*3.6)}
+var pace=+$("wpace").value*1000/3600,leg=+$("wleg").value*1000,brk=+$("wbrk").value,dh=+$("wdh").value,n=Math.min(100,Math.max(10,Math.round(plenA(a)/40)+1)),sp=samp(a,n);$("wout").textContent="Hazırlanıyor…";$("wcamp").hidden=true;wDays=[];
+function go(el){var cT=[0],asc=[0],dsc=[0],i;for(i=1;i<sp.length;i++){var d=sp[i][2]-sp[i-1][2],de=el&&el[i]!=null&&el[i-1]!=null?el[i]-el[i-1]:0,up=de>1?de:0;asc.push(asc[i-1]+up);dsc.push(dsc[i-1]+(de<-1?-de:0));cT.push(cT[i-1]+d/pace+up*3.6)}
 var tot=sp[sp.length-1][2],T=cT[cT.length-1];
+function seg(t){for(var i=1;i<cT.length;i++){if(cT[i]>=t){return[i-1,i,(t-cT[i-1])/Math.max(1e-6,cT[i]-cT[i-1])]}}return[cT.length-2,cT.length-1,1]}
+function atT(arr,t){var q=seg(t);return arr[q[0]]+(arr[q[1]]-arr[q[0]])*q[2]}
+function posT(t){var q=seg(t),a=sp[q[0]],b=sp[q[1]];return[a[0]+(b[0]-a[0])*q[2],a[1]+(b[1]-a[1])*q[2],a[2]+(b[2]-a[2])*q[2]]}
 function at(arr,dm){for(var i=1;i<sp.length;i++){if(sp[i][2]>=dm){var f=(dm-sp[i-1][2])/Math.max(1,sp[i][2]-sp[i-1][2]);return arr[i-1]+(arr[i]-arr[i-1])*f}}return arr[arr.length-1]}
-var st=$("wst").value?$("wst").value.split(":"):null,d0=new Date();if(st)d0.setHours(+st[0],+st[1],0,0);var t0=d0.getTime(),bs=brk?600:0;
-function clock(sec){var b=brk?Math.floor(sec/(brk*60)):0;return new Date(t0+(sec+b*bs)*1000).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}
-var out=[],k=0,prev=0;while(prev<tot-1){var e=Math.min(tot,prev+leg);k++;out.push("Etap "+k+": "+(prev/1000).toFixed(1)+"–"+(e/1000).toFixed(1)+" km · ↑"+Math.round(at(asc,e)-at(asc,prev))+" m · "+hm2(at(cT,e)-at(cT,prev))+" · varış "+clock(at(cT,e)));prev=e}
+var st=$("wst").value?$("wst").value.split(":"):null,d0=new Date();if(st)d0.setHours(+st[0],+st[1],0,0);var t0=d0.getTime(),bs=brk?600:0,sn=sunToday();
+function clock(sec,base){var b=brk?Math.floor(sec/(brk*60)):0;return new Date((base||t0)+(sec+b*bs)*1000).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}
+var out=[],note=el?"":"\n(Rakım verisi alınamadı: eğim hesaba katılmadı.)";
+if(dh>0){var dayT=dh*3600,D=Math.max(1,Math.ceil(T/dayT-1e-6));
+for(var k=1;k<=D;k++){var a0=(k-1)*dayT,a1=Math.min(T,k*dayT),p0=posT(a0),p1=posT(a1),walk=a1-a0,fin=walk+(brk?Math.floor(walk/(brk*60))*bs:0),late=sn&&t0+fin*1000>sn[1];
+out.push("Gün "+k+": "+(p0[2]/1000).toFixed(1)+"–"+(p1[2]/1000).toFixed(1)+" km ("+dtxt(p1[2]-p0[2])+") · ↑"+Math.round(atT(asc,a1)-atT(asc,a0))+" ↓"+Math.round(atT(dsc,a1)-atT(dsc,a0))+" m · yürüme "+hm2(walk)+" · bitiş ~"+hh(t0+fin*1000)+(late?" ⚠ gün batımından sonra":"")+"\n   "+(k<D?"Kamp: ":"Varış: ")+fcAs("mgrs",p1[0],p1[1]));
+wDays.push({lat:p1[0],lon:p1[1],name:k<D?"Kamp "+k:"Varış",day:k})}
+$("wout").textContent="Toplam "+dtxt(tot)+" · ↑"+Math.round(asc[asc.length-1])+" ↓"+Math.round(dsc[dsc.length-1])+" m · yürüme "+hm2(T)+" · "+D+" gün (günde ~"+dh+" saat, her gün "+hh(t0)+"'de başlar)\n"+out.join("\n")+note;
+$("wcamp").hidden=D<2;return}
+var k2=0,prev=0;while(prev<tot-1){var e=Math.min(tot,prev+leg);k2++;out.push("Etap "+k2+": "+(prev/1000).toFixed(1)+"–"+(e/1000).toFixed(1)+" km · ↑"+Math.round(at(asc,e)-at(asc,prev))+" m · "+hm2(at(cT,e)-at(cT,prev))+" · varış "+clock(at(cT,e)));prev=e}
 if(brk)for(var m=1;m*brk*60<T;m++)out.push("Mola "+m+": ~"+clock(m*brk*60)+" (10 dk)");
-var fin=T+(brk?Math.floor(T/(brk*60))*bs:0),sn=sunToday(),w="";if(sn&&t0+fin*1000>sn[1])w="⚠ Bitiş gün batımından (~"+new Date(sn[1]).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})+") sonra.\n";
-$("wout").textContent=w+"Toplam "+dtxt(tot)+" · ↑"+Math.round(asc[asc.length-1])+" m · yürüme "+hm2(T)+(brk?" · molalarla "+hm2(fin):"")+" · bitiş ~"+clock(T)+"\n"+out.join("\n")+(el?"":"\n(Rakım verisi alınamadı: eğim hesaba katılmadı.)")}
+var fin2=T+(brk?Math.floor(T/(brk*60))*bs:0),w="";if(sn&&t0+fin2*1000>sn[1])w="⚠ Bitiş gün batımından (~"+hh(sn[1])+") sonra.\n";
+$("wout").textContent=w+"Toplam "+dtxt(tot)+" · ↑"+Math.round(asc[asc.length-1])+" m · yürüme "+hm2(T)+(brk?" · molalarla "+hm2(fin2):"")+" · bitiş ~"+clock(T)+"\n"+out.join("\n")+note}
 getEle(sp,function(el){go(el)},function(){go(null)})};
+$("wcamp").onclick=function(){wDays.filter(function(d){return d.name!=="Varış"}).forEach(function(d,i){wps.push({lat:d.lat,lon:d.lon,ele:null,name:d.name,color:"#2f8f5b",icon:"⛺",note:"Gün "+d.day+" sonu",cat:"Kamp",rad:0,id:Date.now()+i})});renderWps();save();toast(wDays.length-1+" kamp noktası pin olarak eklendi.")};
 /* güvenlik zamanlayıcısı */
 var gEnd=0,gAlarm=false,gGrace=300000,gB=0;
 function gSave(){try{localStorage.setItem("patika-gt",JSON.stringify({end:gEnd,d:+$("gd").value}))}catch(e){}}
@@ -1582,9 +1666,144 @@ if(left>0){var m=Math.ceil(left/60000);$("gtx").textContent=" · ⏱ "+(m>=60?Ma
 $("gtx").textContent=" · ⏱ !";var over=-left;$("gbn").hidden=false;
 if(over<gGrace)$("gbt").textContent="Güvenlik süresi doldu! "+Math.ceil((gGrace-over)/1000)+" sn içinde “İyiyim” de.";
 else{$("gbt").textContent="Acil mesaj hazır: SMS ya da Paylaş ile gönder.";if(!gAlarm){gAlarm=true;openAcil();emShow()}}
-if(Date.now()-gB>4000){gB=Date.now();beep();if(navigator.vibrate)navigator.vibrate([400,150,400])}}
+if(Date.now()-gB>4000){say("Güvenlik süresi doldu. İyiyim demen gerekiyor");gB=Date.now();beep();if(navigator.vibrate)navigator.vibrate([400,150,400])}}
 setInterval(gTick,1000);
 try{var G=JSON.parse(localStorage.getItem("patika-gt")||"null");if(G&&G.end>0){gEnd=G.end;if(G.d)$("gd").value=G.d;gTick()}}catch(e){}
+/* v8: eldiven modu, bildirim, Android köprüsü */
+$("gl").onchange=function(){document.documentElement.classList.toggle("glove",this.checked)};
+function isNat(){return!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())}
+function notify(t){try{if(isNat()&&Capacitor.registerPlugin)Capacitor.registerPlugin("LocalNotifications").schedule({notifications:[{id:Date.now()%2147483000,title:"Patika Pro",body:t}]});else if(window.Notification&&Notification.permission==="granted"&&document.hidden)new Notification("Patika Pro",{body:t})}catch(e){}}
+$("ntp").onclick=function(){if(isNat()&&Capacitor.registerPlugin)Capacitor.registerPlugin("LocalNotifications").requestPermissions();else if(window.Notification)Notification.requestPermission().then(function(p){toast(p==="granted"?"Bildirim izni verildi.":"Bildirim izni verilmedi.")});else toast("Bu tarayıcı bildirimleri desteklemiyor.")};
+var natId=null;
+function natStart(){if(!isNat()||!Capacitor.registerPlugin||natId!=null)return;var BG=Capacitor.registerPlugin("BackgroundGeolocation");
+BG.addWatcher({backgroundMessage:"İz kaydediliyor",backgroundTitle:"Patika Pro",requestPermissions:true,stale:false,distanceFilter:3},function(l,err){if(err){toast(err.code==="NOT_AUTHORIZED"?"Arka plan konum izni gerekli":"Konum hatası");return}
+onPos({coords:{latitude:l.latitude,longitude:l.longitude,accuracy:l.accuracy,altitude:l.altitude,speed:l.speed,heading:l.bearing},timestamp:l.time})}).then(function(id){natId=id})}
+function natStop(){if(natId==null)return;Capacitor.registerPlugin("BackgroundGeolocation").removeWatcher({id:natId});natId=null}
+/* v8: yağış radarı (Rain Viewer) */
+var rdL=null,rdF=[],rdI=0,rdTm=null;
+function rdLoad(cb){fetch("https://api.rainviewer.com/public/weather-maps.json",{cache:"no-store"}).then(function(r){return r.json()}).then(function(j){rdF=(j.radar&&j.radar.past||[]).map(function(f){return{t:f.time,u:j.host+f.path+"/256/{z}/{x}/{y}/2/1_1.png"}});if(!rdF.length)throw 0;$("rdT").max=rdF.length-1;cb()}).catch(function(){$("rdx").textContent="Radar verisi alınamadı (internet gerekir)."})}
+function rdShow(i){rdI=Math.max(0,Math.min(rdF.length-1,i));$("rdT").value=rdI;var f=rdF[rdI];if(!f)return;if(rdL)map.removeLayer(rdL);
+rdL=L.tileLayer(f.u,{opacity:.65,zIndex:7,maxNativeZoom:7,maxZoom:19,attribution:'Weather data by <a href="https://www.rainviewer.com" target="_blank" rel="noopener">Rain Viewer</a>'}).addTo(map);
+$("rdx").textContent="Radar: "+new Date(f.t*1000).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})+" ("+Math.round((Date.now()/1000-f.t)/60)+" dk önce)"}
+function rdStop(){clearInterval(rdTm);rdTm=null;$("rdP").textContent="▶ Oynat"}
+$("rdOn").onchange=function(){if(this.checked)rdLoad(function(){rdShow(rdF.length-1)});else{if(rdL){map.removeLayer(rdL);rdL=null}rdStop();$("rdx").textContent=""}};
+$("rdT").oninput=function(){if($("rdOn").checked&&rdF.length)rdShow(+this.value)};
+$("rdP").onclick=function(){if(rdTm){rdStop();return}function play(){$("rdP").textContent="⏸ Durdur";rdTm=setInterval(function(){rdShow((rdI+1)%rdF.length)},700)}
+if(!$("rdOn").checked){$("rdOn").checked=true;rdLoad(function(){rdShow(0);play()})}else if(rdF.length)play()};
+setInterval(function(){if($("rdOn").checked&&!rdTm)rdLoad(function(){rdShow(rdF.length-1)})},600000);
+/* v8: bölge giriş/çıkış uyarısı */
+var shIn={};
+function inShape(s,la,lo){if(s.type==="circle")return hav({lat:la,lon:lo},{lat:s.pts[0][0],lon:s.pts[0][1]})<=s.r;var p=sPath(s),c=false;for(var i=0,j=p.length-1;i<p.length;j=i++){if((p[i][0]>la)!==(p[j][0]>la)&&lo<(p[j][1]-p[i][1])*(la-p[i][0])/(p[j][0]-p[i][0])+p[i][1])c=!c}return c}
+function fenceAlert(t){beep();toast("📍 "+t);say(t);if(navigator.vibrate)navigator.vibrate([300,100,300])}
+function chkFence(p){SH.forEach(function(s){if(!s.al)return;var now=inShape(s,p.lat,p.lon),was=shIn[s.id];shIn[s.id]=now;if(was===undefined||was===now)return;
+if(now&&(s.al==="in"||s.al==="both"))fenceAlert("Bölgeye girdin: "+s.name);else if(!now&&(s.al==="out"||s.al==="both"))fenceAlert("Bölgeden çıktın: "+s.name)})}
+/* v8: renkli iz ve oynatma */
+var trg=L.layerGroup().addTo(map),pbm=L.circleMarker([0,0],{radius:8,color:"#fff",weight:3,fillColor:"#e91e63",fillOpacity:1}),pbT=null,pbV=0;
+function lerp(a,b,t){return Math.round(a+(b-a)*t)}
+function rampCol(t){t=Math.max(0,Math.min(1,t));var s=[[33,150,243],[76,175,80],[255,235,59],[255,152,0],[244,67,54]],x=t*(s.length-1),i=Math.min(s.length-2,Math.floor(x)),f=x-i,a=s[i],b=s[i+1];return"rgb("+lerp(a[0],b[0],f)+","+lerp(a[1],b[1],f)+","+lerp(a[2],b[2],f)+")"}
+function trRender(force){var m=$("trc").value;if(!m){if(trg.getLayers().length){trg.clearLayers();line.setStyle({opacity:1})}return}
+if(!force&&pts.length%10!==0&&trg.getLayers().length)return;trg.clearLayers();line.setStyle({opacity:0});if(pts.length<2)return;
+var step=Math.max(1,Math.floor(pts.length/1500)),mx=1,mn=1e9,mxe=-1e9,i;pts.forEach(function(p){if(p.ele!=null){mn=Math.min(mn,p.ele);mxe=Math.max(mxe,p.ele)}});
+function spd(a,b){var dt=(b.t-a.t)/1000;return dt>0?hav(a,b)/dt:0}
+if(m==="speed")for(i=step;i<pts.length;i+=step)mx=Math.max(mx,spd(pts[i-step],pts[i]));
+for(i=step;i<pts.length;i+=step){var a=pts[i-step],b=pts[i],col="#2f6b4f";
+if(m==="speed")col=rampCol(spd(a,b)/mx);else if(m==="ele"&&b.ele!=null)col=rampCol((b.ele-mn)/Math.max(10,mxe-mn));
+else if(m==="slope"&&a.ele!=null&&b.ele!=null){var dd=hav(a,b),g=dd>1?Math.abs(b.ele-a.ele)/dd*100:0;col=g<10?"#2f8f5b":g<25?"#e0b81e":g<40?"#e08a1e":"#d64541"}
+L.polyline([[a.lat,a.lon],[b.lat,b.lon]],{color:col,weight:6,interactive:false,lineCap:"round"}).addTo(trg)}}
+$("trc").onchange=function(){trRender(true)};
+function pbReset(){clearInterval(pbT);pbT=null;pbV=0;$("pbb").textContent="▶ İzi oynat";$("pbr").value=0;$("pbx").textContent="";if(pbm._map)map.removeLayer(pbm)}
+function pbAt(f){var n=pts.length;if(n<2)return;var useT=pts[n-1].t>pts[0].t,r=useT?[pts[0].t,pts[n-1].t]:[0,n-1],T=r[0]+(r[1]-r[0])*f,lo=0,hi=n-1;
+if(useT){while(hi-lo>1){var mid=(lo+hi)>>1;if(pts[mid].t<=T)lo=mid;else hi=mid}}else{lo=Math.min(n-2,Math.floor(f*(n-1)));hi=lo+1}
+var a=pts[lo],b=pts[hi],k=useT&&b.t>a.t?(T-a.t)/(b.t-a.t):0,la=a.lat+(b.lat-a.lat)*k,lo2=a.lon+(b.lon-a.lon)*k;if(!pbm._map)pbm.addTo(map);pbm.setLatLng([la,lo2]);
+var el=a.ele!=null&&b.ele!=null?Math.round(a.ele+(b.ele-a.ele)*k):null,d=(a.d||0)+((b.d||0)-(a.d||0))*k;
+$("pbx").textContent=(useT?"Geçen "+hm2((T-r[0])/1000)+" · ":"")+(d/1000).toFixed(2)+" km"+(el!=null?" · "+el+" m":"");$("pbr").value=Math.round(f*1000)}
+$("pbr").oninput=function(){pbV=+this.value/1000;pbAt(pbV)};
+$("pbb").onclick=function(){var self=this;if(pbT){clearInterval(pbT);pbT=null;self.textContent="▶ İzi oynat";return}
+if(pts.length<2){toast("Önce bir iz kaydet ya da aç.");return}var n=pts.length,useT=pts[n-1].t>pts[0].t,dur=useT?(pts[n-1].t-pts[0].t)/1000:n-1,sp=+$("pbs").value;if(pbV>=1)pbV=0;self.textContent="⏸ Durdur";
+pbT=setInterval(function(){pbV+=(0.1*sp)/Math.max(1,dur);if(pbV>=1){pbV=1;pbAt(1);clearInterval(pbT);pbT=null;self.textContent="▶ İzi oynat";return}pbAt(pbV);map.panTo(pbm.getLatLng(),{animate:false})},100)};
+/* v8: indirilen alanlar */
+var DLS=[],dlg=L.layerGroup().addTo(map);
+function dlLoad(){try{DLS=JSON.parse(localStorage.getItem("patika-dl")||"[]")}catch(e){DLS=[]}}
+function dlSave(){try{localStorage.setItem("patika-dl",JSON.stringify(DLS))}catch(e){toast("İndirme kaydı tutulamadı: alan dolu")}}
+function dlRec(name,type,layer,list){var ks=list.map(function(t){return t[3]==="dem"?"dem/"+t[0]+"/"+t[1]+"/"+t[2]:layer+"/"+t[0]+"/"+t[1]+"/"+t[2]});DLS.push({id:Date.now(),name:name,type:type,layer:layer,t:Date.now(),ks:ks});dlSave();dlRender()}
+function dlDel(r){var keep={};DLS.forEach(function(o){if(o.id!==r.id)o.ks.forEach(function(k){keep[k]=1})});var del=r.ks.filter(function(k){return!keep[k]});DLS=DLS.filter(function(o){return o.id!==r.id});dlSave();
+if(db&&del.length){var tx=db.transaction("t","readwrite"),st=tx.objectStore("t");del.forEach(function(k){st.delete(k)});tx.oncomplete=function(){toast(del.length+" karo silindi.");cnt()}}dlRender()}
+function dlTiles(r){var ks=r.ks.filter(function(k){return k.indexOf("dem/")!==0}).map(function(k){var a=k.split("/");return[+a[1],+a[2],+a[3]]});if(!ks.length)return[];var z=Math.min.apply(0,ks.map(function(t){return t[0]}));return ks.filter(function(t){return t[0]===z}).slice(0,600)}
+function tileB(t){var n=Math.pow(2,t[0]),f=function(y){return Math.atan(Math.sinh(Math.PI*(1-2*y/n)))*180/Math.PI};return[[f(t[2]+1),t[1]/n*360-180],[f(t[2]),(t[1]+1)/n*360-180]]}
+function dlBounds(r){var ts=dlTiles(r);if(!ts.length)return null;var b=L.latLngBounds(tileB(ts[0]));ts.forEach(function(t){b.extend(tileB(t))});return b}
+function dlRender(){var ul=$("dll");ul.innerHTML="";dlg.clearLayers();if(!DLS.length){ul.innerHTML="<li><span>İndirilmiş alan kaydı yok.</span></li>";return}
+DLS.slice().reverse().forEach(function(r){var li=document.createElement("li"),sp=document.createElement("span"),bx=document.createElement("span");sp.textContent=r.name+" · "+r.ks.length+" karo (~"+(Math.round(r.ks.length*0.02*10)/10)+" MB)";
+function A(x,f){var a=document.createElement("a");a.textContent=x;a.onclick=f;bx.appendChild(a);bx.appendChild(document.createTextNode(" "))}
+A("göster",function(){var b=dlBounds(r);if(b){map.fitBounds(b);closeAll()}});A("ad",function(){var n=prompt("Yeni ad:",r.name);if(n){r.name=n;dlSave();dlRender()}});A("sil",function(){if(confirm("Bu indirmenin karoları silinsin mi?"))dlDel(r)});
+li.appendChild(sp);li.appendChild(bx);ul.appendChild(li);if($("dlv").checked)dlTiles(r).forEach(function(t){L.rectangle(tileB(t),{color:"#1e88e5",weight:1,fillOpacity:.12,interactive:false}).addTo(dlg)})})}
+$("dlv").onchange=dlRender;dlLoad();dlRender();
+/* v7: manyetik sapma (WMM2025) */
+var WMMC=[[1,0,-29351.8,0,12,0],[1,1,-1410.8,4545.4,9.7,-21.5],[2,0,-2556.6,0,-11.6,0],[2,1,2951.1,-3133.6,-5.2,-27.7],[2,2,1649.3,-815.1,-8,-12.1],[3,0,1361,0,-1.3,0],[3,1,-2404.1,-56.6,-4.2,4],[3,2,1243.8,237.5,0.4,-0.3],[3,3,453.6,-549.5,-15.6,-4.1],[4,0,895,0,-1.6,0],[4,1,799.5,278.6,-2.4,-1.1],[4,2,55.7,-133.9,-6,4.1],[4,3,-281.1,212,5.6,1.6],[4,4,12.1,-375.6,-7,-4.4],[5,0,-233.2,0,0.6,0],[5,1,368.9,45.4,1.4,-0.5],[5,2,187.2,220.2,0,2.2],[5,3,-138.7,-122.9,0.6,0.4],[5,4,-142,43,2.2,1.7],[5,5,20.9,106.1,0.9,1.9],[6,0,64.4,0,-0.2,0],[6,1,63.8,-18.4,-0.4,0.3],[6,2,76.9,16.8,0.9,-1.6],[6,3,-115.7,48.8,1.2,-0.4],[6,4,-40.9,-59.8,-0.9,0.9],[6,5,14.9,10.9,0.3,0.7],[6,6,-60.7,72.7,0.9,0.9],[7,0,79.5,0,0,0],[7,1,-77,-48.9,-0.1,0.6],[7,2,-8.8,-14.4,-0.1,0.5],[7,3,59.3,-1,0.5,-0.8],[7,4,15.8,23.4,-0.1,0],[7,5,2.5,-7.4,-0.8,-1],[7,6,-11.1,-25.1,-0.8,0.6],[7,7,14.2,-2.3,0.8,-0.2],[8,0,23.2,0,-0.1,0],[8,1,10.8,7.1,0.2,-0.2],[8,2,-17.5,-12.6,0,0.5],[8,3,2,11.4,0.5,-0.4],[8,4,-21.7,-9.7,-0.1,0.4],[8,5,16.9,12.7,0.3,-0.5],[8,6,15,0.7,0.2,-0.6],[8,7,-16.8,-5.2,0,0.3],[8,8,0.9,3.9,0.2,0.2],[9,0,4.6,0,0,0],[9,1,7.8,-24.8,-0.1,-0.3],[9,2,3,12.2,0.1,0.3],[9,3,-0.2,8.3,0.3,-0.3],[9,4,-2.5,-3.3,-0.3,0.3],[9,5,-13.1,-5.2,0,0.2],[9,6,2.4,7.2,0.3,-0.1],[9,7,8.6,-0.6,-0.1,-0.2],[9,8,-8.7,0.8,0.1,0.4],[9,9,-12.9,10,-0.1,0.1],[10,0,-1.3,0,0.1,0],[10,1,-6.4,3.3,0,0],[10,2,0.2,0,0.1,0],[10,3,2,2.4,0.1,-0.2],[10,4,-1,5.3,0,0.1],[10,5,-0.6,-9.1,-0.3,-0.1],[10,6,-0.9,0.4,0,0.1],[10,7,1.5,-4.2,-0.1,0],[10,8,0.9,-3.8,-0.1,-0.1],[10,9,-2.7,0.9,0,0.2],[10,10,-3.9,-9.1,0,0],[11,0,2.9,0,0,0],[11,1,-1.5,0,0,0],[11,2,-2.5,2.9,0,0.1],[11,3,2.4,-0.6,0,0],[11,4,-0.6,0.2,0,0.1],[11,5,-0.1,0.5,-0.1,0],[11,6,-0.6,-0.3,0,0],[11,7,-0.1,-1.2,0,0.1],[11,8,1.1,-1.7,-0.1,0],[11,9,-1,-2.9,-0.1,0],[11,10,-0.2,-1.8,-0.1,0],[11,11,2.6,-2.3,-0.1,0],[12,0,-2,0,0,0],[12,1,-0.2,-1.3,0,0],[12,2,0.3,0.7,0,0],[12,3,1.2,1,0,-0.1],[12,4,-1.3,-1.4,0,0.1],[12,5,0.6,0,0,0],[12,6,0.6,0.6,0.1,0],[12,7,0.5,-0.1,0,0],[12,8,-0.1,0.8,0,0],[12,9,-0.4,0.1,0,0],[12,10,-0.2,-1,-0.1,0],[12,11,-1.3,0.1,0,0],[12,12,-0.7,0.2,-0.1,-0.1]];
+function wmm(lat,lon,alt,yr){var r=Math.PI/180,A=6378.137,F=1/298.257223563,E2=F*(2-F);lat=Math.max(-89.9,Math.min(89.9,lat));
+var phi=lat*r,lam=lon*r,sp=Math.sin(phi),cp=Math.cos(phi),Rc=A/Math.sqrt(1-E2*sp*sp),p=(Rc+alt)*cp,z=(Rc*(1-E2)+alt)*sp,rr=Math.sqrt(p*p+z*z),phg=Math.asin(z/rr),x=Math.sin(phg),zz=Math.cos(phg),N=12,dt=yr-2025,i,n,m,P=[],dP=[],S=[];
+for(i=0;i<=N;i++){P[i]=[];dP[i]=[]}P[0][0]=1;dP[0][0]=0;
+for(n=1;n<=N;n++)for(m=0;m<=n;m++){if(n===m){P[n][m]=zz*P[n-1][m-1];dP[n][m]=zz*dP[n-1][m-1]+x*P[n-1][m-1]}
+else if(n===1&&m===0){P[n][m]=x*P[0][0];dP[n][m]=x*dP[0][0]-zz*P[0][0]}
+else{var k=m<=n-2?((n-1)*(n-1)-m*m)/((2*n-1)*(2*n-3)):0;P[n][m]=x*P[n-1][m]-(k?k*P[n-2][m]:0);dP[n][m]=x*dP[n-1][m]-zz*P[n-1][m]-(k?k*dP[n-2][m]:0)}}
+S[0]=[1];for(n=1;n<=N;n++){S[n]=[S[n-1][0]*(2*n-1)/n];for(m=1;m<=n;m++)S[n][m]=S[n][m-1]*Math.sqrt((n-m+1)*(m===1?2:1)/(n+m))}
+for(n=1;n<=N;n++)for(m=0;m<=n;m++){P[n][m]*=S[n][m];dP[n][m]*=-S[n][m]}
+var Bx=0,By=0,Bz=0,a=6371.2;
+for(i=0;i<WMMC.length;i++){var c=WMMC[i];n=c[0];m=c[1];var g=c[2]+dt*c[4],h=c[3]+dt*c[5],rp=Math.pow(a/rr,n+2),cm=Math.cos(m*lam),sm=Math.sin(m*lam);
+Bz-=rp*(g*cm+h*sm)*(n+1)*P[n][m];By+=rp*(g*sm-h*cm)*m*P[n][m];Bx-=rp*(g*cm+h*sm)*dP[n][m]}
+By/=zz;var psi=phg-phi,X=Bx*Math.cos(psi)-Bz*Math.sin(psi),Z=Bx*Math.sin(psi)+Bz*Math.cos(psi),H=Math.hypot(X,By);
+return{x:X,y:By,z:Z,h:H,f:Math.hypot(H,Z),i:Math.atan2(Z,H)/r,d:Math.atan2(By,X)/r}}
+function decYear(){var n=new Date(),y=n.getFullYear();return y+(n-new Date(y,0,1))/(new Date(y+1,0,1)-new Date(y,0,1))}
+function toRef(d){return $("nr").value==="mag"?d-decl:d}
+function updDecl(){try{var c=sunPos(),yr=decYear(),r=wmm(c.lat,c.lon,lastFix&&lastFix.ele!=null?Math.max(0,lastFix.ele)/1000:0,yr);decl=r.d;
+$("dcx").textContent="Manyetik sapma: "+(decl>=0?"+":"")+decl.toFixed(1)+"° ("+(decl>=0?"doğu":"batı")+") · WMM2025"+(yr>2030?" · model süresi doldu, yaklaşık değer":"");
+$("nrt").textContent=($("nr").value==="mag"?"Manyetik":"Gerçek")+" kuzey · "+(decl>=0?"+":"")+decl.toFixed(1)+"°"}catch(e){}setHdg(lastH,lastS)}
+$("nr").onchange=function(){updDecl();updT();mLab()};
+/* v7: sesli bildirimler */
+var voice=null;
+function pickVoice(){try{voice=speechSynthesis.getVoices().filter(function(v){return/^tr/i.test(v.lang)})[0]||null}catch(e){}}
+if(window.speechSynthesis){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function say(t,force){if(!window.speechSynthesis||!(force||$("vo").checked))return;try{var u=new SpeechSynthesisUtterance(String(t).replace(/[^\p{L}\p{N}\s.,:%°-]/gu," "));u.lang="tr-TR";if(voice)u.voice=voice;speechSynthesis.speak(u)}catch(e){}}
+function spkD(m){return m<1000?Math.round(m)+" metre":(m/1000).toFixed(1).replace(".",",")+" kilometre"}
+function spkT(s){s=Math.round(s);var h=Math.floor(s/3600),m=Math.floor(s%3600/60);return(h?h+" saat ":"")+(m?m+" dakika":h?"":s+" saniye")}
+$("vtest").onclick=function(){say("Sesli bildirimler çalışıyor",true)};
+setInterval(function(){var N=+$("vsum").value;if(!rec||!N)return;var n=Math.floor((Date.now()-t0)/(N*60000));if(n>vN){vN=n;
+say("Mesafe "+spkD(dist)+". Süre "+spkT((Date.now()-t0)/1000)+(lastFix&&lastFix.ele!=null?". Rakım "+Math.round(lastFix.ele)+" metre":"")+(route.length>1&&rtRem>0?". Rotada kalan "+spkD(rtRem):""))}},5000);
+/* v7: eğim haritası ve DEM */
+function terr(r,g,b){return r*256+g+b/256-32768}
+function slopeGrid(e,W,H,res){var o=new Float32Array(W*H),s=Math.max(1,Math.round(30/res));for(var y=0;y<H;y++)for(var x=0;x<W;x++){var x0=Math.max(0,x-s),x1=Math.min(W-1,x+s),y0=Math.max(0,y-s),y1=Math.min(H-1,y+s),dx=(e[y*W+x1]-e[y*W+x0])/((x1-x0)*res),dy=(e[y1*W+x]-e[y0*W+x])/((y1-y0)*res);o[y*W+x]=Math.atan(Math.hypot(dx,dy))*180/Math.PI}return o}
+function slopeCol(d,mode){if(mode==="cig")return d<27?null:d<30?[255,235,59,150]:d<35?[255,152,0,165]:d<40?[244,67,54,175]:d<45?[156,39,176,185]:[69,90,100,175];
+return d<5?null:d<15?[76,175,80,110]:d<25?[255,235,59,135]:d<30?[255,152,0,150]:d<35?[244,67,54,165]:d<45?[156,39,176,180]:[33,33,33,200]}
+var DEMU="https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",demC={},demQ=[];
+function demBlob(z,x,y){var k="dem/"+z+"/"+x+"/"+y;return gt(k).then(function(b){if(b)return b;return fetch(DEMU.replace("{z}",z).replace("{x}",x).replace("{y}",y)).then(function(r){if(!r.ok)throw new Error("dem");return r.blob()}).then(function(b){pt(k,b);return b})})}
+function demData(z,x,y){var k=z+"/"+x+"/"+y;if(demC[k])return demC[k];
+var pr=demBlob(z,x,y).then(function(b){return new Promise(function(res,rej){var im=new Image(),u=URL.createObjectURL(b);im.onload=function(){URL.revokeObjectURL(u);var c=document.createElement("canvas");c.width=c.height=256;var g=c.getContext("2d",{willReadFrequently:true});g.drawImage(im,0,0);var d=g.getImageData(0,0,256,256).data,e=new Float32Array(65536);for(var i=0;i<65536;i++)e[i]=terr(d[i*4],d[i*4+1],d[i*4+2]);res(e)};im.onerror=function(){rej(new Error("img"))};im.src=u})}).catch(function(e){delete demC[k];throw e});
+demC[k]=pr;demQ.push(k);if(demQ.length>40)delete demC[demQ.shift()];return pr}
+function demEle(lat,lon){var z=12,n=Math.pow(2,z),r=Math.PI/180,x=(lon+180)/360*n,y=(1-Math.asinh(Math.tan(lat*r))/Math.PI)/2*n,tx=Math.floor(x),ty=Math.floor(y);
+return demData(z,tx,ty).then(function(e){var fx=(x-tx)*255,fy=(y-ty)*255,x0=Math.floor(fx),y0=Math.floor(fy),x1=Math.min(255,x0+1),y1=Math.min(255,y0+1),ax=fx-x0,ay=fy-y0;
+return e[y0*256+x0]*(1-ax)*(1-ay)+e[y0*256+x1]*ax*(1-ay)+e[y1*256+x0]*(1-ax)*ay+e[y1*256+x1]*ax*ay})}
+function getEle(pts,cb,eb){Promise.all(pts.map(function(p){return demEle(p[0],p[1]).catch(function(){return null})})).then(function(r){
+if(r.every(function(v){return v!=null&&!isNaN(v)})){pts.forEach(function(p,i){eleC[p[0].toFixed(4)+","+p[1].toFixed(4)]=r[i]});cb(r)}else getEleNet(pts,cb,eb)})}
+var SlopeLayer=L.GridLayer.extend({createTile:function(c,done){var cv=document.createElement("canvas");cv.width=cv.height=256;var mode=$("slm").value;
+demData(c.z,c.x,c.y).then(function(e){var n=Math.pow(2,c.z),lat=Math.atan(Math.sinh(Math.PI*(1-2*(c.y+0.5)/n)))*180/Math.PI,res=40075016.686*Math.cos(lat*Math.PI/180)/(256*n),sg=slopeGrid(e,256,256,res),g=cv.getContext("2d"),im=g.createImageData(256,256),d=im.data;
+for(var i=0;i<65536;i++){var col=slopeCol(sg[i],mode);if(col){d[i*4]=col[0];d[i*4+1]=col[1];d[i*4+2]=col[2];d[i*4+3]=col[3]}}g.putImageData(im,0,0);done(null,cv)}).catch(function(){done(null,cv)});return cv}});
+var slp=new SlopeLayer({id:"slp",zIndex:5,minZoom:9,maxNativeZoom:14,maxZoom:19,opacity:.7,attribution:"Yükseklik: Terrain Tiles (AWS)"});
+$("slOn").onchange=function(){this.checked?slp.addTo(map):map.removeLayer(slp)};
+$("slm").onchange=function(){slp.redraw()};
+$("slOp").oninput=function(){slp.setOpacity(+this.value)};
+/* v7: yedekleme ve depolama */
+function bkData(){var ls={};["patika","patika-s","patika-sh","patika-gt"].concat($("bkk").checked?["patika-keys"]:[]).forEach(function(k){var v=localStorage.getItem(k);if(v!=null)ls[k]=v});return{app:"patika",v:1,date:new Date().toISOString(),ls:ls,tracks:TK}}
+function bkRestore(j){if(!j||j.app!=="patika")throw new Error("Bu bir Patika yedeği değil.");
+Object.keys(j.ls||{}).forEach(function(k){if(k==="patika-sh"){var a=[],b=[];try{a=JSON.parse(j.ls[k])}catch(e){}try{b=JSON.parse(localStorage.getItem(k)||"[]")}catch(e){}var ids={};b.forEach(function(s){ids[s.id]=1});a.forEach(function(s){if(!ids[s.id])b.push(s)});localStorage.setItem(k,JSON.stringify(b))}else localStorage.setItem(k,j.ls[k])});
+var have={};TK.forEach(function(t){have[t.id]=1});(j.tracks||[]).forEach(function(t){if(!have[t.id])TK.push(t)});tkSort()}
+function bkStat(){var n=0;try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);n+=k.length+localStorage.getItem(k).length}}catch(e){}
+var t="Ayarlar ve pinler: "+Math.round(n/1024)+" KB · Kayıtlı iz: "+TK.length;
+if(navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(function(e){t+=" · Toplam: "+Math.round(e.usage/1048576)+" / "+Math.round(e.quota/1048576)+" MB";return navigator.storage.persisted?navigator.storage.persisted():null}).then(function(p){$("bks").textContent=t+(p==null?"":" · Kalıcı depolama: "+(p?"evet":"hayır"))}).catch(function(){$("bks").textContent=t});else $("bks").textContent=t}
+$("bkb").onclick=function(){var j=bkData();dlf("patika-yedek-"+j.date.slice(0,10)+".json",JSON.stringify(j),"application/json");toast("Yedek indirildi ("+j.tracks.length+" iz).")};
+$("bki").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var j=JSON.parse(r.result);if(!j||j.app!=="patika")throw new Error("Bu bir Patika yedeği değil.");
+if(!confirm("Yedek yüklensin mi? Ayarlar ve mevcut kayıt değişir; izler ve bölgeler birleştirilir."))return;bkRestore(j);tkFlush().then(function(){toast("Geri yüklendi, sayfa yenileniyor…");setTimeout(function(){location.reload()},900)})}catch(e){toast("Yedek okunamadı: "+e.message)}};r.readAsText(f)};
+$("bkp").onclick=function(){if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().then(function(p){toast(p?"Kalıcı depolama verildi.":"Tarayıcı reddetti: uygulamayı ana ekrana ekleyip tekrar dene.");bkStat()});else toast("Bu tarayıcı desteklemiyor.")};
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+updDecl();
 /* v6: bölgeler */
 var SH=[],shg=L.layerGroup().addTo(map),shm=null,shp=[],shSel=0,shTmp=L.polyline([],{color:"#e53935",weight:3,dashArray:"6 6"}).addTo(map),SL={};
 function shLoad(){try{SH=JSON.parse(localStorage.getItem("patika-sh")||"[]")}catch(e){SH=[]}}
@@ -1617,6 +1836,7 @@ t.innerHTML="<b>"+esc(s.name)+"</b><br>Alan: "+aTxt(m.a)+" · Çevre: "+dtxt(m.p
 c.type="color";c.value=s.color;c.oninput=function(){s.color=c.value;shStyle(s);shSave();shList()};
 o.type="range";o.min=0;o.max=0.8;o.step=0.05;o.value=s.op;o.oninput=function(){s.op=+o.value;shStyle(s);shSave()};
 d.appendChild(lab2("Renk",c));d.appendChild(lab2("Saydamlık",o));
+var al=document.createElement("select");[["","Uyarı yok"],["in","Girince uyar"],["out","Çıkınca uyar"],["both","Girince ve çıkınca"]].forEach(function(x){var q=document.createElement("option");q.value=x[0];q.textContent=x[1];al.appendChild(q)});al.value=s.al||"";al.onchange=function(){s.al=al.value;delete shIn[s.id];shSave()};d.appendChild(al);
 function B(x,f){var b=document.createElement("button");b.textContent=x;b.onclick=f;d.appendChild(b)}
 B(shSel===s.id?"Düzenlemeyi bitir":"Düzenle",function(){shSel=shSel===s.id?0:s.id;map.closePopup();shRender()});
 B("Hedef yap",function(){var cc=sCenter(s);setT(cc[0],cc[1]);map.closePopup()});
@@ -1645,13 +1865,13 @@ var KEYS={},KDEF=[["mt1","MapTiler Outdoor","https://api.maptiler.com/maps/outdo
 ["mb1","Mapbox Outdoors","https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/256/{z}/{x}/{y}@2x?access_token=","mb",22],["mb2","Mapbox Uydu + yol","https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=","mb",22]],lc=null;
 try{KEYS=JSON.parse(localStorage.getItem("patika-keys")||"{}")}catch(e){KEYS={}}
 ["mt","tf","sd","mb"].forEach(function(k){$("k"+k).value=KEYS[k]||""});
-function rebuildLC(){if(lc)map.removeControl(lc);var b={};G1.concat(G2).concat(G3).forEach(function(a){if(LAYERS[a[0]])b[a[1]]=LAYERS[a[0]]});lc=L.control.layers(b,{"Yürüyüş yolları":hike,"Gölgeli kabartma":hs,"Yer adları":lbl},{position:"bottomright",collapsed:true}).addTo(map)}
+function rebuildLC(){if(lc)map.removeControl(lc);var b={};G1.concat(G2).concat(G3).forEach(function(a){if(LAYERS[a[0]])b[a[1]]=LAYERS[a[0]]});lc=L.control.layers(b,{"Yürüyüş yolları":hike,"Gölgeli kabartma":hs,"Yer adları":lbl,"Eğim haritası":slp},{position:"bottomright",collapsed:true}).addTo(map)}
 function keyLayers(){KDEF.forEach(function(a){var l=LAYERS[a[0]];if(l&&map.hasLayer(l)){map.removeLayer(l);cur=topo;topo.addTo(map)}delete LAYERS[a[0]]});G3.length=0;
 KDEF.forEach(function(a){var kk=KEYS[a[3]];if(!kk)return;LAYERS[a[0]]=L.tileLayer(a[2]+encodeURIComponent(kk),{id:a[0],maxZoom:a[4],subdomains:"abc",attribution:a[1],noDl:true});G3.push([a[0],a[1]])});
 popBm();rebuildLC();var v=cur.options.id;if($("bm").querySelector('option[value="'+v+'"]'))$("bm").value=v}
 $("ksave").onclick=function(){["mt","tf","sd","mb"].forEach(function(k){KEYS[k]=$("k"+k).value.trim()});try{localStorage.setItem("patika-keys",JSON.stringify(KEYS))}catch(e){}keyLayers();toast("Anahtarlar kaydedildi: yeni haritalar listede.")};
 map.on("baselayerchange",function(e){cur=e.layer;var id=e.layer.options.id;if(id&&$("bm").value!==id)$("bm").value=id;zi();filt();saveAll()});
-var OVM={hike:"ovOn",hs:"hsOn",lbl:"lbOn"};
+var OVM={hike:"ovOn",hs:"hsOn",lbl:"lbOn",slp:"slOn"};
 map.on("overlayadd overlayremove",function(e){var id=OVM[e.layer.options.id];if(id){$(id).checked=map.hasLayer(e.layer);saveAll()}});
 $("lbOn").onchange=function(){this.checked?lbl.addTo(map):map.removeLayer(lbl)};
 keyLayers();
@@ -1666,7 +1886,7 @@ else $("pwas").textContent="PWA için patika-pwa klasörünü HTTPS ya da localh
 try{var s=JSON.parse(localStorage.getItem("patika")||"null");if(s){pts=s.pts||[];wps=s.wps||[];dist=s.dist||0;gain=s.gain||0;loss=s.loss||0;mov=s.mov||0;stp=s.stp||0;mxs=s.mxs||0;line.setLatLngs(pts.map(function(p){return[p.lat,p.lon]}));if(pts.length)map.fitBounds(line.getBounds())}}catch(e){}
 renderWps();stats();
 /* settings */
-var SID=["cs","bm","ovOn","ovOp","hsOn","hsOp","fb","fc","fs","imOp","dz","fa","fj","bt","ao","gm","mg","mt","nm","sw","bl","wpace","wleg","wbrk","lbOn"];
+var SID=["cs","bm","ovOn","ovOp","hsOn","hsOp","fb","fc","fs","imOp","dz","fa","fj","bt","ao","gm","mg","mt","nm","sw","bl","wpace","wleg","wbrk","lbOn","slOn","slm","slOp","vo","vsum","nr","trc","gl","wxa","wdh","pbs"];
 function sAll(){var o={};SID.forEach(function(i){var e=$(i);o[i]=e.type==="checkbox"?e.checked:e.value});document.querySelectorAll("[data-h]").forEach(function(c){o[c.dataset.h]=c.checked});return o}
 function saveAll(){try{var c=map.getCenter();localStorage.setItem("patika-s",JSON.stringify({set:sAll(),v:[c.lat,c.lng,map.getZoom()],route:route,plan:plan,tgt:tgt,tvia:tvia,unit:uMil,m:mpts}))}catch(e){}}
 try{var S=JSON.parse(localStorage.getItem("patika-s")||"null");if(S){
